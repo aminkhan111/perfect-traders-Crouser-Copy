@@ -1,4 +1,4 @@
-import { kv } from '@vercel/kv';
+import { Redis } from '@upstash/redis';
 
 export interface StockData {
   symbol: string;
@@ -24,17 +24,29 @@ export interface WatchlistData {
 
 const WATCHLIST_KEY = 'shared-watchlist';
 
+// Initialize Upstash Redis client
+const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL!,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+});
+
 // Get shared watchlist
 export async function getSharedWatchlist(): Promise<WatchlistData> {
   try {
-    const data = await kv.get<WatchlistData>(WATCHLIST_KEY);
-    return data || {
+    console.log('🔍 Fetching watchlist from Upstash Redis...');
+    const data = await redis.get<WatchlistData>(WATCHLIST_KEY);
+    console.log('📊 Raw data from Redis:', data);
+
+    const result = data || {
       stocks: [],
       lastUpdated: new Date().toISOString(),
       version: '1.0'
     };
+
+    console.log(`✅ Returning ${result.stocks.length} stocks from watchlist`);
+    return result;
   } catch (error) {
-    console.error('Error getting watchlist:', error);
+    console.error('❌ Error getting watchlist from Redis:', error);
     return {
       stocks: [],
       lastUpdated: new Date().toISOString(),
@@ -46,10 +58,12 @@ export async function getSharedWatchlist(): Promise<WatchlistData> {
 // Save shared watchlist
 export async function saveSharedWatchlist(watchlistData: WatchlistData): Promise<boolean> {
   try {
-    await kv.set(WATCHLIST_KEY, watchlistData);
+    console.log(`💾 Saving ${watchlistData.stocks.length} stocks to Upstash Redis...`);
+    await redis.set(WATCHLIST_KEY, watchlistData);
+    console.log('✅ Successfully saved watchlist to Redis');
     return true;
   } catch (error) {
-    console.error('Error saving watchlist:', error);
+    console.error('❌ Error saving watchlist to Redis:', error);
     return false;
   }
 }
