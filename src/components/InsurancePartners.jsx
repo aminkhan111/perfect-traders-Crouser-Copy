@@ -7,62 +7,62 @@ const InsurancePartners = () => {
   const partners = [
     {
       name: "HDFC ERGO",
-      logo: "/api/placeholder/120/60",
+      logo: "/images/insurance-logos/hdfc-ergo.svg",
       category: "General Insurance"
     },
     {
       name: "ICICI Lombard",
-      logo: "/api/placeholder/120/60", 
+      logo: "/images/insurance-logos/icici-lombard.svg",
       category: "General Insurance"
     },
     {
       name: "Bajaj Allianz",
-      logo: "/api/placeholder/120/60",
+      logo: "/images/insurance-logos/bajaj-allianz.svg",
       category: "Life & General"
     },
     {
       name: "SBI Life",
-      logo: "/api/placeholder/120/60",
+      logo: "/images/insurance-logos/sbi-life.svg",
       category: "Life Insurance"
     },
     {
       name: "Max Life",
-      logo: "/api/placeholder/120/60",
+      logo: "/images/insurance-logos/max-life.svg",
       category: "Life Insurance"
     },
     {
       name: "Tata AIG",
-      logo: "/api/placeholder/120/60",
+      logo: "/images/insurance-logos/tata-aig.svg",
       category: "General Insurance"
     },
     {
       name: "Reliance General",
-      logo: "/api/placeholder/120/60",
+      logo: "/images/insurance-logos/reliance-general.svg",
       category: "General Insurance"
     },
     {
       name: "LIC",
-      logo: "/api/placeholder/120/60",
+      logo: "/images/insurance-logos/lic.svg",
       category: "Life Insurance"
     },
     {
       name: "Star Health",
-      logo: "/api/placeholder/120/60",
+      logo: "/images/insurance-logos/star-health.svg",
       category: "Health Insurance"
     },
     {
       name: "Care Health",
-      logo: "/api/placeholder/120/60",
+      logo: "/images/insurance-logos/care-health.svg",
       category: "Health Insurance"
     },
     {
       name: "Niva Bupa",
-      logo: "/api/placeholder/120/60",
+      logo: "/images/insurance-logos/niva-bupa.svg",
       category: "Health Insurance"
     },
     {
       name: "Digit Insurance",
-      logo: "/api/placeholder/120/60",
+      logo: "/images/insurance-logos/digit-insurance.svg",
       category: "General Insurance"
     }
   ];
@@ -124,14 +124,23 @@ const InsurancePartners = () => {
               className="bg-white rounded-xl p-6 shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-2 group"
             >
               <div className="text-center">
-                <div className="bg-gray-100 rounded-lg p-4 mb-3 group-hover:bg-blue-50 transition-colors duration-300">
+                <div className="bg-gray-100 rounded-lg p-4 mb-3 group-hover:bg-blue-50 transition-colors duration-300 h-20 flex items-center justify-center">
                   <Image
                     src={partner.logo}
                     alt={partner.name}
                     width={120}
                     height={60}
                     className="mx-auto object-contain"
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                      e.target.nextSibling.style.display = 'block';
+                    }}
                   />
+                  <div className="hidden text-center">
+                    <div className="text-sm font-bold text-gray-700 leading-tight">
+                      {partner.name}
+                    </div>
+                  </div>
                 </div>
                 <h3 className="font-semibold text-gray-800 text-sm mb-1">{partner.name}</h3>
                 <p className="text-xs text-gray-500">{partner.category}</p>
