@@ -56,12 +56,12 @@ export async function getSharedWatchlist(): Promise<WatchlistData> {
 // Save shared watchlist
 export async function saveSharedWatchlist(watchlistData: WatchlistData): Promise<boolean> {
   try {
-    console.log(`💾 Saving ${watchlistData.stocks.length} stocks to Upstash Redis...`);
-    await redis.set(WATCHLIST_KEY, watchlistData);
-    console.log('✅ Successfully saved watchlist to Redis');
+    console.log(`💾 Saving ${watchlistData.stocks.length} stocks to memory store...`);
+    memoryStore[WATCHLIST_KEY] = watchlistData;
+    console.log('✅ Successfully saved watchlist to memory store');
     return true;
   } catch (error) {
-    console.error('❌ Error saving watchlist to Redis:', error);
+    console.error('❌ Error saving watchlist to memory store:', error);
     return false;
   }
 }
