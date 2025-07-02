@@ -7,7 +7,7 @@ const InsurancePartners = () => {
   const partners = [
     {
       name: "HDFC ERGO",
-      logo: "/images/insurance-logos/hdfc-ergo.svg",
+      logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/HDFC-Ergo-logo.png/240px-HDFC-Ergo-logo.png",
       category: "General Insurance"
     },
     {
@@ -17,27 +17,27 @@ const InsurancePartners = () => {
     },
     {
       name: "Bajaj Allianz",
-      logo: "/images/insurance-logos/bajaj-allianz.svg",
+      logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f9/Bajaj_Allianz_Insurance.svg/240px-Bajaj_Allianz_Insurance.svg.png",
       category: "Life & General"
     },
     {
       name: "SBI Life",
-      logo: "/images/insurance-logos/sbi-life.svg",
+      logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/23/SBI_Life_Insurance_2022_Logo.svg/320px-SBI_Life_Insurance_2022_Logo.svg.png",
       category: "Life Insurance"
     },
     {
       name: "Max Life",
-      logo: "/images/insurance-logos/max-life.svg",
+      logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1f/Max_Life_Insurance_logo.svg/240px-Max_Life_Insurance_logo.svg.png",
       category: "Life Insurance"
     },
     {
       name: "Tata AIG",
-      logo: "/images/insurance-logos/tata-aig.svg",
+      logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8b/TATA_AIG_logo.png/240px-TATA_AIG_logo.png",
       category: "General Insurance"
     },
     {
       name: "Reliance General",
-      logo: "/images/insurance-logos/reliance-general.svg",
+      logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4f/Reliance_General_Insurance.svg/240px-Reliance_General_Insurance.svg.png",
       category: "General Insurance"
     },
     {
@@ -47,12 +47,12 @@ const InsurancePartners = () => {
     },
     {
       name: "Star Health",
-      logo: "/images/insurance-logos/star-health.svg",
+      logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f8/Star_Health_and_Allied_Insurance.svg/240px-Star_Health_and_Allied_Insurance.svg.png",
       category: "Health Insurance"
     },
     {
       name: "Care Health",
-      logo: "/images/insurance-logos/care-health.svg",
+      logo: "https://upload.wikimedia.org/wikipedia/commons/d/dc/Care_Health_Insurance_Logo.png",
       category: "Health Insurance"
     },
     {
@@ -62,7 +62,7 @@ const InsurancePartners = () => {
     },
     {
       name: "Digit Insurance",
-      logo: "/images/insurance-logos/digit-insurance.svg",
+      logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a8/Digit_Insurance.jpg/240px-Digit_Insurance.jpg",
       category: "General Insurance"
     }
   ];
