@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { FaPhoneAlt, FaWhatsapp, FaEnvelope, FaMapMarkerAlt, FaClock } from 'react-icons/fa';
+import { FaPhoneAlt, FaWhatsapp, FaEnvelope } from 'react-icons/fa';
 
 const InsuranceCTA = () => {
   const contactMethods = [
@@ -33,15 +33,6 @@ const InsuranceCTA = () => {
       bgColor: "bg-purple-500",
       hoverColor: "hover:bg-purple-600"
     }
-  ];
-
-  const quickLinks = [
-    "Health Insurance Calculator",
-    "Car Insurance Renewal",
-    "Life Insurance Premium Calculator",
-    "Travel Insurance Quote",
-    "Home Insurance Coverage",
-    "Business Insurance Plans"
   ];
 
   return (
@@ -148,66 +139,7 @@ const InsuranceCTA = () => {
           </div>
         </motion.div>
 
-        {/* Quick Links & Office Info */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-          {/* Quick Links */}
-          <motion.div
-            initial={{ opacity: 0, x: -30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8 }}
-            viewport={{ once: true }}
-          >
-            <h4 className="text-2xl font-bold mb-6">Quick Links</h4>
-            <div className="grid grid-cols-1 gap-3">
-              {quickLinks.map((link, index) => (
-                <Link
-                  key={index}
-                  href="/contact"
-                  className="text-blue-100 hover:text-white transition-colors duration-300 flex items-center group"
-                >
-                  <span className="w-2 h-2 bg-blue-400 rounded-full mr-3 group-hover:bg-white transition-colors duration-300"></span>
-                  {link}
-                </Link>
-              ))}
-            </div>
-          </motion.div>
 
-          {/* Office Info */}
-          <motion.div
-            initial={{ opacity: 0, x: 30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8 }}
-            viewport={{ once: true }}
-          >
-            <h4 className="text-2xl font-bold mb-6">Visit Our Office</h4>
-            <div className="space-y-4">
-              <div className="flex items-start">
-                <FaMapMarkerAlt className="text-blue-300 mt-1 mr-3 flex-shrink-0" />
-                <div>
-                  <p className="text-blue-100">
-                    123 Business District, Financial Center<br />
-                    Mumbai, Maharashtra 400001<br />
-                    India
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center">
-                <FaClock className="text-blue-300 mr-3" />
-                <p className="text-blue-100">
-                  Mon - Sat: 9:00 AM - 7:00 PM<br />
-                  Sun: 10:00 AM - 5:00 PM
-                </p>
-              </div>
-            </div>
-            
-            <div className="mt-6 p-4 bg-blue-500/20 rounded-lg border border-blue-400/30">
-              <p className="text-sm text-blue-100">
-                <strong>Emergency Claims:</strong> Available 24/7<br />
-                Call our emergency helpline for urgent assistance
-              </p>
-            </div>
-          </motion.div>
-        </div>
 
         {/* Bottom Banner */}
         <motion.div
