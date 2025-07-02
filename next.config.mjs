@@ -12,7 +12,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    domains: ['images.unsplash.com', 'res.cloudinary.com', 'img.freepik.com', 'plus.unsplash.com'],
+    domains: ['images.unsplash.com', 'res.cloudinary.com', 'img.freepik.com', 'plus.unsplash.com', 'upload.wikimedia.org'],
   },
 };
 
