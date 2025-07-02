@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { FaPhoneAlt, FaWhatsapp, FaEnvelope } from 'react-icons/fa';
 
-const InsuranceCTA = () => {
+const InsuranceCTA = ({ openModal }) => {
   const contactMethods = [
     {
       icon: <FaPhoneAlt className="text-2xl" />,
@@ -64,18 +64,18 @@ const InsuranceCTA = () => {
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-            <Link
-              href="/contact"
+            <button
+              onClick={() => openModal && openModal('Insurance Quote', 'apply')}
               className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-4 px-8 rounded-lg transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl"
             >
               Get Free Quote Now
-            </Link>
-            <Link
-              href="#contact-methods"
+            </button>
+            <button
+              onClick={() => openModal && openModal('Expert Consultation', 'apply')}
               className="border-2 border-blue-300 text-blue-300 hover:bg-blue-300 hover:text-blue-900 font-bold py-4 px-8 rounded-lg transition-all duration-300"
             >
               Talk to Expert
-            </Link>
+            </button>
           </div>
 
           {/* Quick Stats */}
@@ -128,12 +128,12 @@ const InsuranceCTA = () => {
                 <h4 className="text-xl font-bold mb-2">{method.title}</h4>
                 <p className="text-blue-100 mb-3">{method.description}</p>
                 <p className="text-blue-300 font-semibold mb-4">{method.contact}</p>
-                <Link
-                  href="/contact"
+                <button
+                  onClick={() => openModal && openModal(`${method.title} Support`, 'apply')}
                   className={`${method.bgColor} ${method.hoverColor} text-white font-semibold py-2 px-6 rounded-lg transition-all duration-300 inline-block`}
                 >
                   {method.action}
-                </Link>
+                </button>
               </motion.div>
             ))}
           </div>
@@ -154,12 +154,12 @@ const InsuranceCTA = () => {
             <p className="text-blue-100 mb-4">
               Get up to 20% discount on your first insurance policy. Limited time offer!
             </p>
-            <Link
-              href="/contact"
+            <button
+              onClick={() => openModal && openModal('Special Discount Offer', 'apply')}
               className="bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-3 px-8 rounded-lg transition-all duration-300 inline-block shadow-lg hover:shadow-xl"
             >
               Claim Your Discount
-            </Link>
+            </button>
           </div>
         </motion.div>
       </div>

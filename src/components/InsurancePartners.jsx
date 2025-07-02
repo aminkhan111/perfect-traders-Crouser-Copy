@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 
-const InsurancePartners = () => {
+const InsurancePartners = ({ openModal }) => {
   const partners = [
     {
       name: "HDFC ERGO",

@@ -13,7 +13,7 @@ import {
   FaUserMd
 } from 'react-icons/fa';
 
-const InsuranceProducts = () => {
+const InsuranceProducts = ({ openModal }) => {
   const insuranceProducts = [
     {
       icon: <FaHeartbeat className="text-4xl text-red-500" />,

@@ -123,24 +123,26 @@ const SharesFormModal = ({ isOpen, onClose, share, actionType }) => {
         
         {/* Header */}
         <div className={`p-6 ${
-          actionType === 'buy' 
-            ? 'bg-yellow-500' 
-            : actionType === 'sell' 
-              ? 'bg-yellow-700' 
+          actionType === 'buy'
+            ? 'bg-yellow-500'
+            : actionType === 'sell'
+              ? 'bg-yellow-700'
               : 'bg-blue-600'
         } text-white`}>
           <h3 className="text-xl font-bold">
-            {actionType === 'buy' 
-              ? 'Buy' 
-              : actionType === 'sell' 
-                ? 'Sell' 
-                : 'Apply for'} {share?.name}
-            {actionType === 'apply' ? ' IPO' : ' Shares'}
+            {actionType === 'buy'
+              ? 'Buy'
+              : actionType === 'sell'
+                ? 'Sell'
+                : 'Request for'} {share?.name}
+            {share?.name?.toLowerCase().includes('insurance') || share?.name?.toLowerCase().includes('quote') || share?.name?.toLowerCase().includes('expert') || share?.name?.toLowerCase().includes('consultation') || share?.name?.toLowerCase().includes('discount') ? '' : actionType === 'apply' ? ' IPO' : ' Shares'}
           </h3>
           <p className="mt-1">
-            {actionType === 'apply' 
-              ? `Price Range: ₹${share?.price}` 
-              : `Current Price: ₹${share?.price?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`}
+            {share?.name?.toLowerCase().includes('insurance') || share?.name?.toLowerCase().includes('quote') || share?.name?.toLowerCase().includes('expert') || share?.name?.toLowerCase().includes('consultation') || share?.name?.toLowerCase().includes('discount')
+              ? 'Get personalized assistance from our experts'
+              : actionType === 'apply'
+                ? `Price Range: ₹${share?.price}`
+                : `Current Price: ₹${share?.price?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`}
           </p>
         </div>
         
@@ -154,19 +156,27 @@ const SharesFormModal = ({ isOpen, onClose, share, actionType }) => {
         ) : (
           <form onSubmit={handleSubmit} className="p-6">
             <div className="space-y-4">
-              {/* IPO details when apply */}
+              {/* IPO details when apply or Insurance info */}
               {actionType === 'apply' && (
                 <div className="bg-blue-50 p-4 rounded-lg mb-4">
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <p className="text-gray-600">Lot Size</p>
-                      <p className="font-medium">{share?.lotSize?.toLocaleString()}</p>
+                  {share?.name?.toLowerCase().includes('insurance') || share?.name?.toLowerCase().includes('quote') || share?.name?.toLowerCase().includes('expert') || share?.name?.toLowerCase().includes('consultation') || share?.name?.toLowerCase().includes('discount') ? (
+                    <div className="text-sm">
+                      <p className="text-gray-600 mb-2">Service Details:</p>
+                      <p className="font-medium text-blue-700">{share?.name}</p>
+                      <p className="text-gray-600 mt-2">Our experts will contact you within 24 hours to discuss your requirements.</p>
                     </div>
-                    <div>
-                      <p className="text-gray-600">Min. Investment</p>
-                      <p className="font-medium">₹{share?.minInvestment}</p>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <p className="text-gray-600">Lot Size</p>
+                        <p className="font-medium">{share?.lotSize?.toLocaleString()}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-600">Min. Investment</p>
+                        <p className="font-medium">₹{share?.minInvestment}</p>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               )}
               
@@ -233,7 +243,9 @@ const SharesFormModal = ({ isOpen, onClose, share, actionType }) => {
               {/* Amount field */}
               <div>
                 <label htmlFor="amount" className="block text-sm font-medium text-gray-700 mb-1">
-                  Amount to {actionType === 'buy' ? 'Invest' : actionType === 'sell' ? 'Sell' : 'Apply'} (₹) *
+                  {share?.name?.toLowerCase().includes('insurance') || share?.name?.toLowerCase().includes('quote') || share?.name?.toLowerCase().includes('expert') || share?.name?.toLowerCase().includes('consultation') || share?.name?.toLowerCase().includes('discount')
+                    ? 'Preferred Coverage Amount (₹)'
+                    : `Amount to ${actionType === 'buy' ? 'Invest' : actionType === 'sell' ? 'Sell' : 'Apply'} (₹)`} *
                 </label>
                 <input
                   type="text"
@@ -244,7 +256,9 @@ const SharesFormModal = ({ isOpen, onClose, share, actionType }) => {
                   className={`w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                     errors.amount ? 'border-red-500' : 'border-gray-300'
                   }`}
-                  placeholder="Enter amount in ₹"
+                  placeholder={share?.name?.toLowerCase().includes('insurance') || share?.name?.toLowerCase().includes('quote') || share?.name?.toLowerCase().includes('expert') || share?.name?.toLowerCase().includes('consultation') || share?.name?.toLowerCase().includes('discount')
+                    ? 'Enter desired coverage amount'
+                    : 'Enter amount in ₹'}
                   disabled={isSubmitting}
                 />
                 {errors.amount && <p className="mt-1 text-sm text-red-600">{errors.amount}</p>}
@@ -261,17 +275,19 @@ const SharesFormModal = ({ isOpen, onClose, share, actionType }) => {
               <button
                 type="submit"
                 className={`w-full py-3 px-4 rounded-md font-medium text-white ${
-                  actionType === 'buy' 
-                    ? 'bg-yellow-500 hover:bg-yellow-600' 
-                    : actionType === 'sell' 
-                      ? 'bg-yellow-700 hover:bg-yellow-800' 
+                  actionType === 'buy'
+                    ? 'bg-yellow-500 hover:bg-yellow-600'
+                    : actionType === 'sell'
+                      ? 'bg-yellow-700 hover:bg-yellow-800'
                       : 'bg-blue-600 hover:bg-blue-700'
                 } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 disabled:opacity-50 transition-colors`}
                 disabled={isSubmitting}
               >
-                {isSubmitting 
-                  ? 'Processing...' 
-                  : `Submit ${actionType === 'buy' ? 'Buy' : actionType === 'sell' ? 'Sell' : 'Apply'} Request`}
+                {isSubmitting
+                  ? 'Processing...'
+                  : share?.name?.toLowerCase().includes('insurance') || share?.name?.toLowerCase().includes('quote') || share?.name?.toLowerCase().includes('expert') || share?.name?.toLowerCase().includes('consultation') || share?.name?.toLowerCase().includes('discount')
+                    ? 'Submit Request'
+                    : `Submit ${actionType === 'buy' ? 'Buy' : actionType === 'sell' ? 'Sell' : 'Apply'} Request`}
               </button>
               
               <p className="text-xs text-gray-500 text-center mt-4">

@@ -12,7 +12,7 @@ import {
   FaAward
 } from 'react-icons/fa';
 
-const InsuranceFeatures = () => {
+const InsuranceFeatures = ({ openModal }) => {
   const features = [
     {
       icon: <FaRocket className="text-4xl text-blue-500" />,

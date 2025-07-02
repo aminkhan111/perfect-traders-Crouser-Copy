@@ -3,7 +3,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
 
-const SuccessStories = () => {
+const SuccessStories = ({ openModal }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
 
@@ -348,6 +348,7 @@ const SuccessStories = () => {
             transition={{ duration: 0.6, delay: 0.8 }}
           >
             <motion.button
+              onClick={() => openModal && openModal('Investment Opportunity', 'apply')}
               whileHover={{ scale: 1.05, y: -2 }}
               whileTap={{ scale: 0.95 }}
               className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white px-4 md:px-6 py-2.5 md:py-3 rounded-lg md:rounded-xl font-bold text-sm md:text-base shadow-2xl hover:shadow-blue-500/25 transition-all duration-300 border border-white/20"

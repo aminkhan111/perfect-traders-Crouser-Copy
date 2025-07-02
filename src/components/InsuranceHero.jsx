@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { FaShieldAlt, FaCheckCircle, FaPhoneAlt } from 'react-icons/fa';
 
-const InsuranceHero = () => {
+const InsuranceHero = ({ openModal }) => {
   return (
     <section className="relative bg-gradient-to-br from-blue-900 via-blue-800 to-blue-700 text-white overflow-hidden">
       {/* Background Pattern */}
@@ -66,13 +66,13 @@ const InsuranceHero = () => {
               >
                 Explore Insurance Plans
               </Link>
-              <Link
-                href="/contact"
+              <button
+                onClick={() => openModal && openModal('Expert Advice', 'apply')}
                 className="border-2 border-blue-300 text-blue-300 hover:bg-blue-300 hover:text-blue-900 font-semibold py-4 px-8 rounded-lg transition-all duration-300 text-center flex items-center justify-center"
               >
                 <FaPhoneAlt className="mr-2" />
                 Get Expert Advice
-              </Link>
+              </button>
             </div>
           </motion.div>
 
