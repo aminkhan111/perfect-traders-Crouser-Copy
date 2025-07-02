@@ -154,12 +154,12 @@ const InsuranceProducts = ({ openModal }) => {
             <p className="text-gray-600 mb-6">
               Our insurance experts can help you find the perfect policy for your specific needs.
             </p>
-            <Link
-              href="/contact"
+            <button
+              onClick={() => openModal && openModal('Expert Consultation', 'apply')}
               className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-8 rounded-lg transition-all duration-300 inline-block shadow-lg hover:shadow-xl"
             >
               Speak to an Expert
-            </Link>
+            </button>
           </div>
         </motion.div>
       </div>

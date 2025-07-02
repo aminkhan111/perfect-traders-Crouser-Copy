@@ -60,12 +60,12 @@ const InsuranceHero = ({ openModal }) => {
 
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4">
-              <Link
-                href="#insurance-products"
+              <button
+                onClick={() => openModal && openModal('Insurance Plans Inquiry', 'apply')}
                 className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-4 px-8 rounded-lg transition-all duration-300 text-center shadow-lg hover:shadow-xl transform hover:-translate-y-1"
               >
                 Explore Insurance Plans
-              </Link>
+              </button>
               <button
                 onClick={() => openModal && openModal('Expert Advice', 'apply')}
                 className="border-2 border-blue-300 text-blue-300 hover:bg-blue-300 hover:text-blue-900 font-semibold py-4 px-8 rounded-lg transition-all duration-300 text-center flex items-center justify-center"
