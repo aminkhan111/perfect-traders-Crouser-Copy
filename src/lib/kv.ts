@@ -1,4 +1,5 @@
-import { Redis } from '@upstash/redis';
+// Using localStorage as fallback until database is set up
+// This will work immediately but won't have cross-user sharing
 
 export interface StockData {
   symbol: string;
@@ -24,18 +25,15 @@ export interface WatchlistData {
 
 const WATCHLIST_KEY = 'shared-watchlist';
 
-// Initialize Upstash Redis client
-const redis = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL!,
-  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
-});
+// Simple in-memory storage for now (will be replaced with database)
+let memoryStore: { [key: string]: any } = {};
 
 // Get shared watchlist
 export async function getSharedWatchlist(): Promise<WatchlistData> {
   try {
-    console.log('🔍 Fetching watchlist from Upstash Redis...');
-    const data = await redis.get<WatchlistData>(WATCHLIST_KEY);
-    console.log('📊 Raw data from Redis:', data);
+    console.log('🔍 Fetching watchlist from memory store...');
+    const data = memoryStore[WATCHLIST_KEY] as WatchlistData;
+    console.log('📊 Raw data from memory:', data);
 
     const result = data || {
       stocks: [],
@@ -46,7 +44,7 @@ export async function getSharedWatchlist(): Promise<WatchlistData> {
     console.log(`✅ Returning ${result.stocks.length} stocks from watchlist`);
     return result;
   } catch (error) {
-    console.error('❌ Error getting watchlist from Redis:', error);
+    console.error('❌ Error getting watchlist from memory:', error);
     return {
       stocks: [],
       lastUpdated: new Date().toISOString(),
