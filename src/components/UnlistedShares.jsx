@@ -1,14 +1,16 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { FaChartLine, FaShieldAlt, FaHandHoldingUsd, FaSearchDollar, FaChevronDown, FaChevronUp, FaArrowUp, FaArrowDown } from 'react-icons/fa';
+import { FaChartLine, FaShieldAlt, FaHandHoldingUsd, FaSearchDollar, FaChevronDown, FaChevronUp, FaArrowUp, FaArrowDown, FaEye } from 'react-icons/fa';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
+import { useRouter } from 'next/navigation';
 import SharesFormModal from './SharesFormModal';
 import SuccessStories from './SuccessStories';
 
 const UnlistedShares = () => {
+  const router = useRouter();
   const [openFaq, setOpenFaq] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedShare, setSelectedShare] = useState(null);
@@ -67,6 +69,16 @@ const UnlistedShares = () => {
         price: parseFloat(row[5]) || 0, // Price
         marketCap: parseFloat(row[6]) || 0, // Market cap
         chartImage: row[7] || '/charts/default-chart.svg', // Chart image
+        // Additional data for detail page (optional columns)
+        description: row[8] || 'No description available',
+        foundedYear: row[9] || 'N/A',
+        employees: row[10] || 'N/A',
+        website: row[11] || 'N/A',
+        headquarters: row[12] || 'N/A',
+        ceo: row[13] || 'N/A',
+        revenue: row[14] || 'N/A',
+        netIncome: row[15] || 'N/A',
+        totalAssets: row[16] || 'N/A'
       }));
 
       setSharesData(processedData);
@@ -92,6 +104,15 @@ const UnlistedShares = () => {
       price: 2400.00,
       marketCap: 574200.000,
       chartImage: '/charts/nse-chart.svg',
+      description: 'National Stock Exchange of India Limited (NSE) is the leading stock exchange of India, located in Mumbai. NSE was established in 1992 as the first demutualized electronic exchange in the country.',
+      foundedYear: '1992',
+      employees: '1,500+',
+      website: 'www.nseindia.com',
+      headquarters: 'Mumbai, Maharashtra',
+      ceo: 'Vikram Limaye',
+      revenue: '₹6,500 Cr',
+      netIncome: '₹2,100 Cr',
+      totalAssets: '₹15,000 Cr'
     },
     {
       id: 2,
@@ -103,6 +124,15 @@ const UnlistedShares = () => {
       price: 1040.00,
       marketCap: 385117.660,
       chartImage: '/charts/tata-chart.svg',
+      description: 'Tata Capital Limited is the flagship financial services company of the Tata group. It provides a wide range of financial solutions including consumer finance, commercial finance, and investment banking.',
+      foundedYear: '2007',
+      employees: '8,000+',
+      website: 'www.tatacapital.com',
+      headquarters: 'Mumbai, Maharashtra',
+      ceo: 'Rajesh Sharma',
+      revenue: '₹12,500 Cr',
+      netIncome: '₹1,800 Cr',
+      totalAssets: '₹85,000 Cr'
     },
     {
       id: 3,
@@ -114,6 +144,15 @@ const UnlistedShares = () => {
       price: 1450.00,
       marketCap: 308474.847,
       chartImage: '/charts/hero-chart.svg',
+      description: 'Hero FinCorp Limited is a leading non-banking financial company (NBFC) in India, providing a wide range of financial services including two-wheeler loans, personal loans, and business loans.',
+      foundedYear: '1991',
+      employees: '5,000+',
+      website: 'www.herofincorp.com',
+      headquarters: 'New Delhi, India',
+      ceo: 'Pradeep Jain',
+      revenue: '₹8,200 Cr',
+      netIncome: '₹1,200 Cr',
+      totalAssets: '₹45,000 Cr'
     },
     {
       id: 4,
@@ -125,6 +164,15 @@ const UnlistedShares = () => {
       price: 900.00,
       marketCap: 134150.504,
       chartImage: '/charts/nayara-chart.svg',
+      description: 'Nayara Energy Limited is an Indian oil and gas company that operates one of the most complex refineries in the world. The company is engaged in refining, marketing, and retail of petroleum products.',
+      foundedYear: '2017',
+      employees: '3,500+',
+      website: 'www.nayaraenergy.com',
+      headquarters: 'Mumbai, Maharashtra',
+      ceo: 'Anish Mehta',
+      revenue: '₹85,000 Cr',
+      netIncome: '₹3,500 Cr',
+      totalAssets: '₹65,000 Cr'
     },
     {
       id: 5,
@@ -136,6 +184,15 @@ const UnlistedShares = () => {
       price: 2650.00,
       marketCap: 134042.950,
       chartImage: '/charts/sbi-chart.svg',
+      description: 'SBI Funds Management Limited is the investment manager to SBI Mutual Fund. It is one of the largest asset management companies in India with a strong track record of fund management.',
+      foundedYear: '1987',
+      employees: '2,000+',
+      website: 'www.sbimf.com',
+      headquarters: 'Mumbai, Maharashtra',
+      ceo: 'Vinay M Tonse',
+      revenue: '₹2,800 Cr',
+      netIncome: '₹850 Cr',
+      totalAssets: '₹12,000 Cr'
     },
     {
       id: 6,
@@ -147,6 +204,15 @@ const UnlistedShares = () => {
       price: 1100.00,
       marketCap: 87535.398,
       chartImage: '/charts/hdb-chart.svg',
+      description: 'HDB Financial Services Limited is a leading non-banking financial company (NBFC) in India, providing loans for two-wheelers, commercial vehicles, personal loans, and business loans.',
+      foundedYear: '2007',
+      employees: '4,500+',
+      website: 'www.hdbfs.com',
+      headquarters: 'Chennai, Tamil Nadu',
+      ceo: 'Ravi Santhanam',
+      revenue: '₹6,200 Cr',
+      netIncome: '₹1,100 Cr',
+      totalAssets: '₹38,000 Cr'
     },
     {
       id: 7,
@@ -158,6 +224,15 @@ const UnlistedShares = () => {
       price: 11500.00,
       marketCap: 68161.990,
       chartImage: '/charts/capgemini-chart.svg',
+      description: 'Capgemini SE is a French multinational information technology (IT) consulting corporation headquartered in Paris, France. It provides consulting, technology, professional, and outsourcing services.',
+      foundedYear: '1967',
+      employees: '3,50,000+',
+      website: 'www.capgemini.com',
+      headquarters: 'Paris, France',
+      ceo: 'Aiman Ezzat',
+      revenue: '₹1,25,000 Cr',
+      netIncome: '₹8,500 Cr',
+      totalAssets: '₹95,000 Cr'
     },
   ];
 
@@ -233,6 +308,11 @@ const UnlistedShares = () => {
   // Function to close modal
   const closeModal = () => {
     setModalOpen(false);
+  };
+
+  // Function to handle stock click (navigate to detail page)
+  const handleStockClick = (stockId) => {
+    router.push(`/unlisted-shares/${stockId}`);
   };
 
   return (
@@ -324,9 +404,12 @@ const UnlistedShares = () => {
                 </tr>
               ) : (
                 sharesData.map((share) => (
-                <tr key={share.id} className="hover:bg-gray-50">
+                <tr key={share.id} className="hover:bg-gray-50 cursor-pointer transition-colors">
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{share.id}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td
+                    className="px-6 py-4 whitespace-nowrap"
+                    onClick={() => handleStockClick(share.id)}
+                  >
                     <div className="flex items-center">
                       <div className="flex-shrink-0 h-10 w-10 relative">
                         {/* Fallback image if logo is not available */}
@@ -335,14 +418,17 @@ const UnlistedShares = () => {
                         </div>
                       </div>
                       <div className="ml-4">
-                        <div className="text-sm font-medium text-blue-600">{share.name}</div>
+                        <div className="text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors">
+                          {share.name}
+                        </div>
+                        <div className="text-xs text-gray-500">Click to view details</div>
                       </div>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     <span className={`px-2 py-1 rounded-full text-xs ${
-                      share.category === 'Unlisted' ? 'bg-blue-100 text-blue-800' : 
-                      share.category === 'Delisted' ? 'bg-red-100 text-red-800' : 
+                      share.category === 'Unlisted' ? 'bg-blue-100 text-blue-800' :
+                      share.category === 'Delisted' ? 'bg-red-100 text-red-800' :
                       'bg-yellow-100 text-yellow-800'
                     }`}>
                       {share.category}
@@ -361,10 +447,10 @@ const UnlistedShares = () => {
                       {/* Placeholder for chart */}
                       <div className="h-full w-full flex items-center justify-center">
                         <svg className="w-full h-full" viewBox="0 0 100 50">
-                          <path 
-                            d="M0,50 L10,45 L20,48 L30,40 L40,42 L50,30 L60,25 L70,15 L80,20 L90,10 L100,5" 
-                            fill="none" 
-                            stroke={share.id % 2 === 0 ? "#16a34a" : "#dc2626"} 
+                          <path
+                            d="M0,50 L10,45 L20,48 L30,40 L40,42 L50,30 L60,25 L70,15 L80,20 L90,10 L100,5"
+                            fill="none"
+                            stroke={share.id % 2 === 0 ? "#16a34a" : "#dc2626"}
                             strokeWidth="2"
                           />
                         </svg>
@@ -372,16 +458,33 @@ const UnlistedShares = () => {
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
-                    <div className="flex space-x-2 justify-center">
-                      <button 
-                        onClick={() => handleBuy(share)}
-                        className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded-md text-sm transition-colors"
+                    <div className="flex space-x-1 justify-center">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleStockClick(share.id);
+                        }}
+                        className="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded-md text-xs transition-colors flex items-center"
+                        title="View Details"
+                      >
+                        <FaEye className="mr-1" size={10} />
+                        View
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleBuy(share);
+                        }}
+                        className="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded-md text-xs transition-colors"
                       >
                         BUY
                       </button>
-                      <button 
-                        onClick={() => handleSell(share)}
-                        className="bg-yellow-700 hover:bg-yellow-800 text-white px-3 py-1 rounded-md text-sm transition-colors"
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleSell(share);
+                        }}
+                        className="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded-md text-xs transition-colors"
                       >
                         SELL
                       </button>
