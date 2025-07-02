@@ -20,80 +20,64 @@ const InsuranceProducts = () => {
       title: "Health Insurance",
       description: "Comprehensive health coverage for you and your family",
       features: ["Cashless Treatment", "Pre & Post Hospitalization", "Day Care Procedures"],
-      startingPrice: "₹199",
       bgColor: "bg-red-50",
-      borderColor: "border-red-200",
-      buttonColor: "bg-red-500 hover:bg-red-600"
+      borderColor: "border-red-200"
     },
     {
       icon: <FaUmbrella className="text-4xl text-blue-500" />,
       title: "Life Insurance",
       description: "Secure your family's financial future with term & savings plans",
       features: ["High Coverage", "Tax Benefits", "Flexible Premiums"],
-      startingPrice: "₹299",
       bgColor: "bg-blue-50",
-      borderColor: "border-blue-200",
-      buttonColor: "bg-blue-500 hover:bg-blue-600"
+      borderColor: "border-blue-200"
     },
     {
       icon: <FaCarAlt className="text-4xl text-green-500" />,
       title: "Car Insurance",
       description: "Comprehensive protection for your vehicle",
       features: ["Zero Depreciation", "Roadside Assistance", "Quick Claims"],
-      startingPrice: "₹2,999",
       bgColor: "bg-green-50",
-      borderColor: "border-green-200",
-      buttonColor: "bg-green-500 hover:bg-green-600"
+      borderColor: "border-green-200"
     },
     {
       icon: <FaMotorcycle className="text-4xl text-orange-500" />,
       title: "Bike Insurance",
       description: "Complete coverage for your two-wheeler",
       features: ["Third Party Cover", "Own Damage", "Personal Accident"],
-      startingPrice: "₹499",
       bgColor: "bg-orange-50",
-      borderColor: "border-orange-200",
-      buttonColor: "bg-orange-500 hover:bg-orange-600"
+      borderColor: "border-orange-200"
     },
     {
       icon: <FaHome className="text-4xl text-purple-500" />,
       title: "Home Insurance",
       description: "Protect your home and belongings",
       features: ["Structure Cover", "Contents Protection", "Liability Cover"],
-      startingPrice: "₹1,999",
       bgColor: "bg-purple-50",
-      borderColor: "border-purple-200",
-      buttonColor: "bg-purple-500 hover:bg-purple-600"
+      borderColor: "border-purple-200"
     },
     {
       icon: <FaPlaneDeparture className="text-4xl text-indigo-500" />,
       title: "Travel Insurance",
       description: "Stay protected during your travels",
       features: ["Medical Emergency", "Trip Cancellation", "Baggage Loss"],
-      startingPrice: "₹99",
       bgColor: "bg-indigo-50",
-      borderColor: "border-indigo-200",
-      buttonColor: "bg-indigo-500 hover:bg-indigo-600"
+      borderColor: "border-indigo-200"
     },
     {
       icon: <FaBriefcase className="text-4xl text-teal-500" />,
       title: "Business Insurance",
       description: "Comprehensive coverage for your business",
       features: ["Property Protection", "Liability Cover", "Business Interruption"],
-      startingPrice: "₹4,999",
       bgColor: "bg-teal-50",
-      borderColor: "border-teal-200",
-      buttonColor: "bg-teal-500 hover:bg-teal-600"
+      borderColor: "border-teal-200"
     },
     {
       icon: <FaUserMd className="text-4xl text-pink-500" />,
       title: "Critical Illness",
       description: "Financial protection against major illnesses",
       features: ["Lump Sum Payout", "Multiple Conditions", "No Medical Tests"],
-      startingPrice: "₹799",
       bgColor: "bg-pink-50",
-      borderColor: "border-pink-200",
-      buttonColor: "bg-pink-500 hover:bg-pink-600"
+      borderColor: "border-pink-200"
     }
   ];
 
@@ -150,22 +134,7 @@ const InsuranceProducts = () => {
                 </ul>
               </div>
 
-              {/* Price and CTA */}
-              <div className="border-t border-gray-200 pt-4">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <span className="text-sm text-gray-500">Starting from</span>
-                    <div className="text-2xl font-bold text-gray-800">{product.startingPrice}</div>
-                    <span className="text-sm text-gray-500">/month</span>
-                  </div>
-                </div>
-                <Link
-                  href="/contact"
-                  className={`w-full ${product.buttonColor} text-white font-semibold py-3 px-4 rounded-lg transition-all duration-300 text-center block hover:shadow-lg`}
-                >
-                  Get Quote
-                </Link>
-              </div>
+
             </motion.div>
           ))}
         </div>
