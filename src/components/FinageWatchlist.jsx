@@ -124,44 +124,26 @@ const FinageWatchlist = () => {
     }, 300);
   };
 
-  // Fetch real-time stock data from Finage API
+  // Fetch real-time stock data via our API route (bypasses CORS)
   const fetchStockData = async (symbol) => {
-    if (!isFinageEnabled) {
-      throw new Error('Finage API not configured');
-    }
-
     try {
-      const response = await fetch(
-        `https://api.finage.co.uk/last/stock/${symbol}.NSE?apikey=${process.env.NEXT_PUBLIC_FINAGE_API_KEY}`
-      );
+      const response = await fetch(`/api/stock/${symbol}`);
 
       if (!response.ok) {
-        if (response.status === 429) {
-          throw new Error('Rate limit exceeded. Please wait before making more requests.');
-        } else if (response.status === 401) {
-          throw new Error('Invalid API key. Please check your Finage API configuration.');
-        } else if (response.status === 404) {
-          throw new Error(`Stock ${symbol} not found on NSE.`);
-        } else {
-          throw new Error(`API Error: ${response.status} ${response.statusText}`);
-        }
+        const errorData = await response.json();
+        throw new Error(errorData.error || `API Error: ${response.status}`);
       }
 
       const data = await response.json();
 
-      // Handle different response formats from Finage API
-      const price = data.price || data.c || data.close || 0;
-      const previousClose = data.pc || data.previousClose || price;
-      const change = data.change || (price - previousClose) || 0;
-      const changePercent = data.changePercent || ((change / previousClose) * 100) || 0;
-
       return {
         symbol: data.symbol || symbol,
-        price: parseFloat(price),
-        change: parseFloat(change),
-        changePercent: parseFloat(changePercent),
-        volume: parseInt(data.volume || data.v || 0),
-        timestamp: data.timestamp || Date.now()
+        price: parseFloat(data.price || 0),
+        change: parseFloat(data.change || 0),
+        changePercent: parseFloat(data.changePercent || 0),
+        volume: parseInt(data.volume || 0),
+        timestamp: data.timestamp || Date.now(),
+        source: data.source || 'api'
       };
     } catch (error) {
       console.error(`Error fetching data for ${symbol}:`, error);
@@ -224,13 +206,8 @@ const FinageWatchlist = () => {
     }
   };
 
-  // Refresh all stocks with real-time data
+  // Refresh all stocks with real-time data using batch API
   const refreshAllStocks = async () => {
-    if (!isFinageEnabled) {
-      setError('Finage API not configured');
-      return;
-    }
-
     if (watchlist.length === 0) {
       setError('No stocks in watchlist to refresh');
       return;
@@ -240,25 +217,42 @@ const FinageWatchlist = () => {
     setError(null);
 
     try {
-      const updatedStocks = await Promise.all(
-        watchlist.map(async (stock) => {
-          try {
-            const realTimeData = await fetchStockData(stock.symbol);
-            return {
-              ...stock,
-              price: realTimeData.price,
-              change: realTimeData.change,
-              changePercent: realTimeData.changePercent,
-              volume: realTimeData.volume,
-              lastUpdated: realTimeData.timestamp
-            };
-          } catch (error) {
-            console.error(`Error updating ${stock.symbol}:`, error);
-            // Return original stock data if API call fails
-            return stock;
-          }
-        })
-      );
+      const symbols = watchlist.map(stock => stock.symbol);
+
+      const response = await fetch('/api/stocks/batch', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ symbols }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Batch API error: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.error || 'Batch API failed');
+      }
+
+      // Update watchlist with new data
+      const updatedStocks = watchlist.map(stock => {
+        const newData = result.data.find(d => d.symbol === stock.symbol);
+        if (newData) {
+          return {
+            ...stock,
+            price: newData.price,
+            change: newData.change,
+            changePercent: newData.changePercent,
+            volume: newData.volume,
+            lastUpdated: newData.timestamp,
+            source: newData.source
+          };
+        }
+        return stock; // Keep original if no new data
+      });
 
       setWatchlist(updatedStocks);
 
@@ -269,9 +263,17 @@ const FinageWatchlist = () => {
         console.error('Error saving to localStorage:', error);
       }
 
+      // Show success message if some data is from API
+      const apiDataCount = result.data.filter(d => d.source === 'finage').length;
+      const mockDataCount = result.data.filter(d => d.source === 'mock').length;
+
+      if (mockDataCount > 0) {
+        setError(`Updated ${apiDataCount} stocks with live data, ${mockDataCount} with demo data (API issues)`);
+      }
+
     } catch (error) {
       console.error('Error refreshing stocks:', error);
-      setError('Failed to refresh stock data. Please try again.');
+      setError(`Failed to refresh stock data: ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -388,12 +390,21 @@ const FinageWatchlist = () => {
           <div className={`px-3 py-1 rounded-full text-sm font-medium ${
             isFinageEnabled ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
           }`}>
-            {isFinageEnabled ? 'Live Data' : 'Demo Mode'}
+            {isFinageEnabled ? '🟢 API Ready' : '🟡 Demo Mode'}
           </div>
 
           {watchlist.length > 0 && watchlist[0].lastUpdated && (
-            <div className="text-sm text-gray-500">
+            <div className="text-sm text-gray-500 flex items-center">
+              <span className="mr-1">🕒</span>
               Last updated: {new Date(watchlist[0].lastUpdated).toLocaleTimeString()}
+            </div>
+          )}
+
+          {watchlist.length > 0 && watchlist[0].source && (
+            <div className={`text-xs px-2 py-1 rounded ${
+              watchlist[0].source === 'finage' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'
+            }`}>
+              {watchlist[0].source === 'finage' ? '📡 Live Data' : '🎭 Demo Data'}
             </div>
           )}
 
@@ -403,7 +414,7 @@ const FinageWatchlist = () => {
             className="flex items-center bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
           >
             <span className={`mr-2 ${loading ? 'animate-spin' : ''}`}>🔄</span>
-            {loading ? 'Refreshing...' : 'Refresh Live Data'}
+            {loading ? 'Refreshing...' : 'Refresh Data'}
           </button>
         </div>
       </div>
