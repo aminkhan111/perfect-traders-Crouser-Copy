@@ -8,35 +8,86 @@ const FinageWatchlist = () => {
   const [error, setError] = useState(null);
   const [passcode, setPasscode] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [showAddStock, setShowAddStock] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
 
   // Check if Finage API is enabled
   const isFinageEnabled = !!process.env.NEXT_PUBLIC_FINAGE_API_KEY;
 
-  // Sample data for demonstration
+  // Comprehensive Indian stocks database for searching
+  const indianStocks = [
+    { symbol: 'RELIANCE', name: 'Reliance Industries Limited', sector: 'Oil & Gas', exchange: 'NSE' },
+    { symbol: 'TCS', name: 'Tata Consultancy Services Limited', sector: 'IT Services', exchange: 'NSE' },
+    { symbol: 'HDFCBANK', name: 'HDFC Bank Limited', sector: 'Banking', exchange: 'NSE' },
+    { symbol: 'INFY', name: 'Infosys Limited', sector: 'IT Services', exchange: 'NSE' },
+    { symbol: 'HINDUNILVR', name: 'Hindustan Unilever Limited', sector: 'FMCG', exchange: 'NSE' },
+    { symbol: 'ICICIBANK', name: 'ICICI Bank Limited', sector: 'Banking', exchange: 'NSE' },
+    { symbol: 'KOTAKBANK', name: 'Kotak Mahindra Bank Limited', sector: 'Banking', exchange: 'NSE' },
+    { symbol: 'BHARTIARTL', name: 'Bharti Airtel Limited', sector: 'Telecom', exchange: 'NSE' },
+    { symbol: 'ITC', name: 'ITC Limited', sector: 'FMCG', exchange: 'NSE' },
+    { symbol: 'SBIN', name: 'State Bank of India', sector: 'Banking', exchange: 'NSE' },
+    { symbol: 'LT', name: 'Larsen & Toubro Limited', sector: 'Construction', exchange: 'NSE' },
+    { symbol: 'ASIANPAINT', name: 'Asian Paints Limited', sector: 'Paints', exchange: 'NSE' },
+    { symbol: 'MARUTI', name: 'Maruti Suzuki India Limited', sector: 'Automobile', exchange: 'NSE' },
+    { symbol: 'BAJFINANCE', name: 'Bajaj Finance Limited', sector: 'NBFC', exchange: 'NSE' },
+    { symbol: 'HCLTECH', name: 'HCL Technologies Limited', sector: 'IT Services', exchange: 'NSE' },
+    { symbol: 'WIPRO', name: 'Wipro Limited', sector: 'IT Services', exchange: 'NSE' },
+    { symbol: 'ULTRACEMCO', name: 'UltraTech Cement Limited', sector: 'Cement', exchange: 'NSE' },
+    { symbol: 'TITAN', name: 'Titan Company Limited', sector: 'Jewellery', exchange: 'NSE' },
+    { symbol: 'NESTLEIND', name: 'Nestle India Limited', sector: 'FMCG', exchange: 'NSE' },
+    { symbol: 'POWERGRID', name: 'Power Grid Corporation of India Limited', sector: 'Power', exchange: 'NSE' },
+    { symbol: 'NTPC', name: 'NTPC Limited', sector: 'Power', exchange: 'NSE' },
+    { symbol: 'AXISBANK', name: 'Axis Bank Limited', sector: 'Banking', exchange: 'NSE' },
+    { symbol: 'ONGC', name: 'Oil and Natural Gas Corporation Limited', sector: 'Oil & Gas', exchange: 'NSE' },
+    { symbol: 'TECHM', name: 'Tech Mahindra Limited', sector: 'IT Services', exchange: 'NSE' },
+    { symbol: 'SUNPHARMA', name: 'Sun Pharmaceutical Industries Limited', sector: 'Pharma', exchange: 'NSE' },
+    { symbol: 'TATAMOTORS', name: 'Tata Motors Limited', sector: 'Automobile', exchange: 'NSE' },
+    { symbol: 'BAJAJFINSV', name: 'Bajaj Finserv Limited', sector: 'Financial Services', exchange: 'NSE' },
+    { symbol: 'JSWSTEEL', name: 'JSW Steel Limited', sector: 'Steel', exchange: 'NSE' },
+    { symbol: 'TATASTEEL', name: 'Tata Steel Limited', sector: 'Steel', exchange: 'NSE' },
+    { symbol: 'ADANIPORTS', name: 'Adani Ports and Special Economic Zone Limited', sector: 'Infrastructure', exchange: 'NSE' },
+    { symbol: 'COALINDIA', name: 'Coal India Limited', sector: 'Mining', exchange: 'NSE' },
+    { symbol: 'DRREDDY', name: 'Dr. Reddys Laboratories Limited', sector: 'Pharma', exchange: 'NSE' },
+    { symbol: 'EICHERMOT', name: 'Eicher Motors Limited', sector: 'Automobile', exchange: 'NSE' },
+    { symbol: 'GRASIM', name: 'Grasim Industries Limited', sector: 'Cement', exchange: 'NSE' },
+    { symbol: 'HEROMOTOCO', name: 'Hero MotoCorp Limited', sector: 'Automobile', exchange: 'NSE' },
+    { symbol: 'HINDALCO', name: 'Hindalco Industries Limited', sector: 'Metals', exchange: 'NSE' },
+    { symbol: 'INDUSINDBK', name: 'IndusInd Bank Limited', sector: 'Banking', exchange: 'NSE' },
+    { symbol: 'BRITANNIA', name: 'Britannia Industries Limited', sector: 'FMCG', exchange: 'NSE' },
+    { symbol: 'CIPLA', name: 'Cipla Limited', sector: 'Pharma', exchange: 'NSE' },
+    { symbol: 'DIVISLAB', name: 'Divis Laboratories Limited', sector: 'Pharma', exchange: 'NSE' }
+  ];
+
+  // Sample data for demonstration with realistic prices
   const sampleStocks = [
     {
       symbol: 'RELIANCE',
-      name: 'Reliance Industries',
+      name: 'Reliance Industries Limited',
       price: 2450.75,
       change: 25.30,
       changePercent: 1.04,
-      volume: 1234567
+      volume: 1234567,
+      sector: 'Oil & Gas'
     },
     {
       symbol: 'TCS',
-      name: 'Tata Consultancy Services',
+      name: 'Tata Consultancy Services Limited',
       price: 3890.50,
       change: -15.25,
       changePercent: -0.39,
-      volume: 987654
+      volume: 987654,
+      sector: 'IT Services'
     },
     {
       symbol: 'HDFCBANK',
-      name: 'HDFC Bank',
+      name: 'HDFC Bank Limited',
       price: 1650.25,
       change: 12.75,
       changePercent: 0.78,
-      volume: 2345678
+      volume: 2345678,
+      sector: 'Banking'
     }
   ];
 
@@ -50,15 +101,124 @@ const FinageWatchlist = () => {
     }
   };
 
-  // Initialize with sample data
+  // Search for stocks
+  const handleSearch = (query) => {
+    if (!query.trim()) {
+      setSearchResults([]);
+      setIsSearching(false);
+      return;
+    }
+
+    setIsSearching(true);
+
+    // Simulate API delay
+    setTimeout(() => {
+      const results = indianStocks.filter(stock =>
+        stock.symbol.toLowerCase().includes(query.toLowerCase()) ||
+        stock.name.toLowerCase().includes(query.toLowerCase()) ||
+        stock.sector.toLowerCase().includes(query.toLowerCase())
+      ).slice(0, 10); // Limit to 10 results
+
+      setSearchResults(results);
+      setIsSearching(false);
+    }, 300);
+  };
+
+  // Add stock to watchlist
+  const addToWatchlist = (stock) => {
+    if (!isAuthenticated) {
+      setError('Please enter passcode to add stocks');
+      return;
+    }
+
+    // Check if stock already exists
+    const exists = watchlist.find(w => w.symbol === stock.symbol);
+    if (exists) {
+      setError(`${stock.symbol} is already in your watchlist`);
+      return;
+    }
+
+    // Generate random price data for demo
+    const randomPrice = Math.random() * 3000 + 500;
+    const randomChange = (Math.random() - 0.5) * 100;
+    const randomVolume = Math.floor(Math.random() * 5000000) + 100000;
+
+    const newStock = {
+      symbol: stock.symbol,
+      name: stock.name,
+      price: randomPrice,
+      change: randomChange,
+      changePercent: (randomChange / randomPrice) * 100,
+      volume: randomVolume,
+      sector: stock.sector,
+      addedAt: Date.now()
+    };
+
+    const newWatchlist = [...watchlist, newStock];
+    setWatchlist(newWatchlist);
+
+    // Save to localStorage
+    try {
+      localStorage.setItem('finage-watchlist', JSON.stringify(newWatchlist));
+    } catch (error) {
+      console.error('Error saving to localStorage:', error);
+    }
+
+    setSearchQuery('');
+    setSearchResults([]);
+    setShowAddStock(false);
+    setError(null);
+  };
+
+  // Remove stock from watchlist
+  const removeFromWatchlist = (symbol) => {
+    if (!isAuthenticated) {
+      setError('Please enter passcode to remove stocks');
+      return;
+    }
+
+    const newWatchlist = watchlist.filter(stock => stock.symbol !== symbol);
+    setWatchlist(newWatchlist);
+
+    // Save to localStorage
+    try {
+      localStorage.setItem('finage-watchlist', JSON.stringify(newWatchlist));
+    } catch (error) {
+      console.error('Error saving to localStorage:', error);
+    }
+  };
+
+  // Initialize with data from localStorage or sample data
   useEffect(() => {
-    if (isFinageEnabled) {
-      setWatchlist(sampleStocks);
-    } else {
-      setError('Finage API not configured. Showing sample data.');
+    try {
+      const saved = localStorage.getItem('finage-watchlist');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        setWatchlist(parsed);
+      } else {
+        setWatchlist(sampleStocks);
+        localStorage.setItem('finage-watchlist', JSON.stringify(sampleStocks));
+      }
+    } catch (error) {
+      console.error('Error loading from localStorage:', error);
       setWatchlist(sampleStocks);
     }
+
+    if (!isFinageEnabled) {
+      setError('Finage API not configured. Showing sample data.');
+    }
   }, []);
+
+  // Search debounce effect
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (searchQuery) {
+        handleSearch(searchQuery);
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   // Format price change
   const formatChange = (change, changePercent) => {
@@ -142,6 +302,106 @@ const FinageWatchlist = () => {
         </div>
       )}
 
+      {/* Add Stock Section */}
+      {isAuthenticated && (
+        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold text-gray-900">Add Stock to Watchlist</h2>
+            <button
+              onClick={() => setShowAddStock(!showAddStock)}
+              className="flex items-center bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
+            >
+              <span className="mr-2">➕</span>
+              Add Stock
+            </button>
+          </div>
+
+          {showAddStock && (
+            <div className="border-t pt-4">
+              <div className="relative mb-4">
+                <span className="absolute left-3 top-3 text-gray-400">🔍</span>
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search Indian stocks (e.g., RELIANCE, TCS, HDFC, Banking, IT Services)"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                />
+              </div>
+
+              {/* Search Results */}
+              {isSearching && (
+                <div className="text-center py-4">
+                  <div className="animate-spin mx-auto mb-2 text-blue-600 text-xl">🔄</div>
+                  <p className="text-gray-500 text-sm">Searching stocks...</p>
+                </div>
+              )}
+
+              {searchResults.length > 0 && !isSearching && (
+                <div className="max-h-80 overflow-y-auto border border-gray-200 rounded-lg">
+                  <div className="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                    <p className="text-sm text-gray-600 font-medium">Found {searchResults.length} stocks</p>
+                  </div>
+                  {searchResults.map((stock, index) => (
+                    <div
+                      key={index}
+                      className="flex justify-between items-center p-4 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 transition-colors"
+                    >
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-3">
+                          <div>
+                            <div className="font-semibold text-gray-900">{stock.symbol}</div>
+                            <div className="text-sm text-gray-600">{stock.name}</div>
+                            <div className="flex items-center space-x-2 mt-1">
+                              <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">{stock.sector}</span>
+                              <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">{stock.exchange}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => addToWatchlist(stock)}
+                        className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 transition-colors flex items-center"
+                      >
+                        <span className="mr-1">➕</span>
+                        Add
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {searchQuery && searchResults.length === 0 && !isSearching && (
+                <div className="text-center py-8 text-gray-500">
+                  <div className="text-2xl mb-2">🔍</div>
+                  <p>No stocks found for "{searchQuery}"</p>
+                  <p className="text-sm mt-1">Try searching by symbol, company name, or sector</p>
+                </div>
+              )}
+
+              {!searchQuery && (
+                <div className="text-center py-8 text-gray-500">
+                  <div className="text-2xl mb-2">📈</div>
+                  <p className="font-medium">Search for Indian Stocks</p>
+                  <p className="text-sm mt-1">Type a stock symbol, company name, or sector to find stocks</p>
+                  <div className="mt-4 flex flex-wrap justify-center gap-2">
+                    {['RELIANCE', 'TCS', 'HDFCBANK', 'Banking', 'IT Services'].map((suggestion) => (
+                      <button
+                        key={suggestion}
+                        onClick={() => setSearchQuery(suggestion)}
+                        className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1 rounded-full transition-colors"
+                      >
+                        {suggestion}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Watchlist Table */}
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
         <div className="overflow-x-auto">
@@ -160,6 +420,9 @@ const FinageWatchlist = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Volume
                 </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Sector
+                </th>
                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Actions
                 </th>
@@ -168,17 +431,17 @@ const FinageWatchlist = () => {
             <tbody className="bg-white divide-y divide-gray-200">
               {loading && watchlist.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="px-6 py-12 text-center">
+                  <td colSpan="6" className="px-6 py-12 text-center">
                     <div className="animate-spin mx-auto mb-4 text-blue-600 text-2xl">🔄</div>
                     <p className="text-gray-500">Loading watchlist...</p>
                   </td>
                 </tr>
               ) : watchlist.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="px-6 py-12 text-center">
+                  <td colSpan="6" className="px-6 py-12 text-center">
                     <div className="mx-auto mb-4 text-gray-400 text-2xl">📈</div>
                     <p className="text-gray-500">No stocks in watchlist</p>
-                    <p className="text-sm text-gray-400">Add some stocks to get started</p>
+                    <p className="text-sm text-gray-400">{isAuthenticated ? 'Click "Add Stock" to search and add stocks' : 'Enter passcode to add stocks'}</p>
                   </td>
                 </tr>
               ) : (
@@ -201,15 +464,29 @@ const FinageWatchlist = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {stock.volume ? stock.volume.toLocaleString() : '-'}
                     </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                        {stock.sector || 'N/A'}
+                      </span>
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-center">
                       <div className="flex justify-center space-x-2">
                         <button
                           onClick={() => console.log('View details for:', stock)}
-                          className="text-blue-600 hover:text-blue-800 transition-colors"
+                          className="text-blue-600 hover:text-blue-800 transition-colors p-1"
                           title="View Details"
                         >
                           👁️
                         </button>
+                        {isAuthenticated && (
+                          <button
+                            onClick={() => removeFromWatchlist(stock.symbol)}
+                            className="text-red-600 hover:text-red-800 transition-colors p-1"
+                            title="Remove from Watchlist"
+                          >
+                            🗑️
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
