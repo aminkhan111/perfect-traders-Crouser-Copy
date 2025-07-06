@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { trackServiceClick, trackPageView } from '@/lib/gtag';
+import { trackServiceClick } from '@/lib/gtag';
 import {
   FaBars,
   FaTimes,
@@ -268,8 +268,9 @@ const NavigationBar = () => {
     { name: 'Home', href: '/', icon: '🏠' },
     { name: 'About Us', href: '/about', icon: '👥' },
     { name: 'Why Us', href: '/why-us', icon: '⭐' },
+    { name: 'Live Stocks', href: '/live-stocks', icon: '📈' },
     { name: 'Watchlist', href: '/watchlist', icon: '📊' },
-    { name: 'Unlisted Shares', href: '/unlisted-shares', icon: '📈' },
+    { name: 'Unlisted Shares', href: '/unlisted-shares', icon: '📋' },
     { name: 'Contact Us', href: '/contact', icon: '📞' },
   ];
 
