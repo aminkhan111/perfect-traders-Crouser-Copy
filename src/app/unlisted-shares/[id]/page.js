@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
+import { trackStockView, trackStockAction } from '@/lib/gtag';
 import {
   FaArrowLeft,
   FaChartLine,
@@ -92,6 +93,9 @@ export default function StockDetailPage() {
       };
 
       setStockData(processedData);
+
+      // Track stock view
+      trackStockView(processedData.name, processedData.id);
     } catch (err) {
       console.error('Error fetching stock data:', err);
       setStockData(getFallbackStockData());
@@ -159,11 +163,21 @@ export default function StockDetailPage() {
   const handleBuy = () => {
     setActionType('buy');
     setModalOpen(true);
+
+    // Track buy action
+    if (stockData) {
+      trackStockAction('buy', stockData.name, stockData.id);
+    }
   };
 
   const handleSell = () => {
     setActionType('sell');
     setModalOpen(true);
+
+    // Track sell action
+    if (stockData) {
+      trackStockAction('sell', stockData.name, stockData.id);
+    }
   };
 
   const closeModal = () => {

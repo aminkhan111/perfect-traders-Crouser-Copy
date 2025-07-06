@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { FaTimes } from 'react-icons/fa';
+import { trackFormSubmission, trackPurchase } from '@/lib/gtag';
 
 const SharesFormModal = ({ isOpen, onClose, share, actionType }) => {
   const [formData, setFormData] = useState({
@@ -90,7 +91,23 @@ const SharesFormModal = ({ isOpen, onClose, share, actionType }) => {
           sharePrice: share?.price,
           action: actionType
         });
-        
+
+        // Track form submission
+        const formType = share?.name?.toLowerCase().includes('insurance') ||
+                        share?.name?.toLowerCase().includes('quote') ||
+                        share?.name?.toLowerCase().includes('expert') ||
+                        share?.name?.toLowerCase().includes('consultation') ||
+                        share?.name?.toLowerCase().includes('discount')
+                        ? 'Insurance Inquiry'
+                        : `Stock ${actionType.charAt(0).toUpperCase() + actionType.slice(1)}`;
+
+        trackFormSubmission(formType, share?.name);
+
+        // Track purchase for buy actions
+        if (actionType === 'buy' && share && formData.amount) {
+          trackPurchase(share.name, share.id, parseFloat(formData.amount));
+        }
+
         setSubmitSuccess(true);
         
         // Close modal after 2 seconds of showing success message

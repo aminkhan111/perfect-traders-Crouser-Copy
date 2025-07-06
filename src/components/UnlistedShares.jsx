@@ -6,6 +6,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
+import { trackStockAction, trackPageView } from '@/lib/gtag';
 import SharesFormModal from './SharesFormModal';
 import SuccessStories from './SuccessStories';
 
@@ -239,6 +240,9 @@ const UnlistedShares = () => {
   // Fetch data on component mount
   useEffect(() => {
     fetchSharesData();
+
+    // Track page view
+    trackPageView('Unlisted Shares');
   }, []);
 
   const benefits = [
@@ -296,6 +300,9 @@ const UnlistedShares = () => {
     setSelectedShare(share);
     setActionType('buy');
     setModalOpen(true);
+
+    // Track buy action
+    trackStockAction('buy', share.name, share.id);
   };
 
   // Function to handle sell request
@@ -303,6 +310,9 @@ const UnlistedShares = () => {
     setSelectedShare(share);
     setActionType('sell');
     setModalOpen(true);
+
+    // Track sell action
+    trackStockAction('sell', share.name, share.id);
   };
 
   // Function to close modal

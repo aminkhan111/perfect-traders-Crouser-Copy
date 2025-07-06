@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
+import { trackServiceClick, trackPageView } from '@/lib/gtag';
 import {
   FaBars,
   FaTimes,
@@ -110,6 +111,7 @@ const ServicesDropdown = ({ isOpen, toggleDropdown }) => {
                   <Link
                     href={item.href}
                     className="flex items-center px-6 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 hover:text-blue-700 transition-all duration-200 group"
+                    onClick={() => trackServiceClick(item.name)}
                   >
                     <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-gray-50 flex items-center justify-center mr-4 group-hover:scale-110 transition-transform duration-200">
                       {item.icon}
@@ -218,7 +220,10 @@ const MobileServicesDropdown = ({ isOpen, toggleDropdown, closeMenu }) => {
                 <Link
                   href={item.href}
                   className="flex items-center py-3 pl-6 pr-4 text-gray-600 hover:text-blue-600 hover:bg-white transition-all duration-200 group"
-                  onClick={closeMenu}
+                  onClick={() => {
+                    closeMenu();
+                    trackServiceClick(item.name);
+                  }}
                 >
                   <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-white flex items-center justify-center mr-3 group-hover:scale-110 transition-transform duration-200 shadow-sm">
                     {item.icon}

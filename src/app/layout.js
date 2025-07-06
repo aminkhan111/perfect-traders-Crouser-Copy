@@ -3,6 +3,7 @@ import NavigationBar from "@/components/NavigationBar";
 import Footer from "@/components/Footer";
 import NavigationLoading from "@/components/NavigationLoading";
 import WhatsAppButton from "@/components/WhatsAppButton";
+import GoogleAnalytics from "@/components/GoogleAnalytics";
 
 export const metadata = {
   title: 'Perfect Traders - Stock Watchlist',
@@ -13,6 +14,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body className="font-sans">
+        <GoogleAnalytics />
         <NavigationBar />
         <NavigationLoading />
         {children}
