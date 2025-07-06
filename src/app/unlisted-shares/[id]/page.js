@@ -3,11 +3,11 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { 
-  FaArrowLeft, 
-  FaChartLine, 
-  FaBuilding, 
-  FaIndustry, 
+import {
+  FaArrowLeft,
+  FaChartLine,
+  FaBuilding,
+  FaIndustry,
   FaCalendarAlt,
   FaUsers,
   FaGlobe,
@@ -16,7 +16,8 @@ import {
   FaMapMarkerAlt,
   FaTrendingUp,
   FaTrendingDown,
-  FaInfoCircle
+  FaInfoCircle,
+  FaExternalLinkAlt
 } from 'react-icons/fa';
 import SharesFormModal from '@/components/SharesFormModal';
 
@@ -355,7 +356,16 @@ export default function StockDetailPage() {
                   <FaGlobe className="text-gray-400 mr-3" />
                   <div>
                     <div className="text-sm text-gray-600">Website</div>
-                    <div className="font-medium text-blue-600">{stockData.website}</div>
+                    <a
+                      href={stockData.website.startsWith('http') ? stockData.website : `https://${stockData.website}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-medium text-blue-600 hover:text-blue-800 hover:underline transition-all duration-200 flex items-center group"
+                      title={`Visit ${stockData.website}`}
+                    >
+                      <span className="group-hover:text-blue-800">{stockData.website}</span>
+                      <FaExternalLinkAlt className="ml-2 text-xs opacity-70 group-hover:opacity-100 group-hover:transform group-hover:translate-x-1 transition-all duration-200" />
+                    </a>
                   </div>
                 </div>
               </div>
