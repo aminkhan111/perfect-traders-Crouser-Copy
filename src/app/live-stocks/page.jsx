@@ -1,4 +1,5 @@
 import FinageWatchlist from "@/components/FinageWatchlist";
+import SimpleWatchlist from "@/components/SimpleWatchlist";
 
 export const metadata = {
   title: 'Live Indian Stocks | Perfect Traders',
@@ -87,6 +88,11 @@ export default function LiveStocksPage() {
       {/* Main Watchlist Component */}
       <section className="py-8">
         <FinageWatchlist />
+      </section>
+
+      {/* Simple Watchlist for Testing */}
+      <section className="py-8 bg-white">
+        <SimpleWatchlist />
       </section>
 
       {/* API Information */}

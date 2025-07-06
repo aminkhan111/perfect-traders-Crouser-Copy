@@ -1,14 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { 
-  FaRefresh, 
-  FaChartLine,
-  FaArrowUp,
-  FaArrowDown,
-  FaEye,
-  FaExclamationTriangle
-} from 'react-icons/fa';
 
 const FinageWatchlist = () => {
   const [watchlist, setWatchlist] = useState([]);
@@ -71,15 +63,15 @@ const FinageWatchlist = () => {
   // Format price change
   const formatChange = (change, changePercent) => {
     if (!change && !changePercent) return null;
-    
+
     const isPositive = change >= 0;
     const changeValue = Math.abs(change || 0).toFixed(2);
     const percentValue = Math.abs(changePercent || 0).toFixed(2);
-    
+
     return (
       <div className={`flex items-center ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
-        {isPositive ? <FaArrowUp className="mr-1" size={12} /> : <FaArrowDown className="mr-1" size={12} />}
-        <span>₹{changeValue} ({percentValue}%)</span>
+        <span>{isPositive ? '↗' : '↘'}</span>
+        <span className="ml-1">₹{changeValue} ({percentValue}%)</span>
       </div>
     );
   };
@@ -105,7 +97,7 @@ const FinageWatchlist = () => {
             disabled={loading}
             className="flex items-center bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
           >
-            <FaRefresh className={`mr-2 ${loading ? 'animate-spin' : ''}`} />
+            <span className={`mr-2 ${loading ? 'animate-spin' : ''}`}>🔄</span>
             Refresh
           </button>
         </div>
@@ -115,7 +107,7 @@ const FinageWatchlist = () => {
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
           <div className="flex items-center">
-            <FaExclamationTriangle className="text-red-500 mr-3" />
+            <span className="text-red-500 mr-3">⚠️</span>
             <span className="text-red-700">{error}</span>
             <button
               onClick={() => setError(null)}
@@ -177,14 +169,14 @@ const FinageWatchlist = () => {
               {loading && watchlist.length === 0 ? (
                 <tr>
                   <td colSpan="5" className="px-6 py-12 text-center">
-                    <FaRefresh className="animate-spin mx-auto mb-4 text-blue-600" size={24} />
+                    <div className="animate-spin mx-auto mb-4 text-blue-600 text-2xl">🔄</div>
                     <p className="text-gray-500">Loading watchlist...</p>
                   </td>
                 </tr>
               ) : watchlist.length === 0 ? (
                 <tr>
                   <td colSpan="5" className="px-6 py-12 text-center">
-                    <FaChartLine className="mx-auto mb-4 text-gray-400" size={24} />
+                    <div className="mx-auto mb-4 text-gray-400 text-2xl">📈</div>
                     <p className="text-gray-500">No stocks in watchlist</p>
                     <p className="text-sm text-gray-400">Add some stocks to get started</p>
                   </td>
@@ -216,7 +208,7 @@ const FinageWatchlist = () => {
                           className="text-blue-600 hover:text-blue-800 transition-colors"
                           title="View Details"
                         >
-                          <FaEye />
+                          👁️
                         </button>
                       </div>
                     </td>
