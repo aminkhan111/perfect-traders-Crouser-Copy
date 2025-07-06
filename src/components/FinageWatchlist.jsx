@@ -124,8 +124,53 @@ const FinageWatchlist = () => {
     }, 300);
   };
 
-  // Add stock to watchlist
-  const addToWatchlist = (stock) => {
+  // Fetch real-time stock data from Finage API
+  const fetchStockData = async (symbol) => {
+    if (!isFinageEnabled) {
+      throw new Error('Finage API not configured');
+    }
+
+    try {
+      const response = await fetch(
+        `https://api.finage.co.uk/last/stock/${symbol}.NSE?apikey=${process.env.NEXT_PUBLIC_FINAGE_API_KEY}`
+      );
+
+      if (!response.ok) {
+        if (response.status === 429) {
+          throw new Error('Rate limit exceeded. Please wait before making more requests.');
+        } else if (response.status === 401) {
+          throw new Error('Invalid API key. Please check your Finage API configuration.');
+        } else if (response.status === 404) {
+          throw new Error(`Stock ${symbol} not found on NSE.`);
+        } else {
+          throw new Error(`API Error: ${response.status} ${response.statusText}`);
+        }
+      }
+
+      const data = await response.json();
+
+      // Handle different response formats from Finage API
+      const price = data.price || data.c || data.close || 0;
+      const previousClose = data.pc || data.previousClose || price;
+      const change = data.change || (price - previousClose) || 0;
+      const changePercent = data.changePercent || ((change / previousClose) * 100) || 0;
+
+      return {
+        symbol: data.symbol || symbol,
+        price: parseFloat(price),
+        change: parseFloat(change),
+        changePercent: parseFloat(changePercent),
+        volume: parseInt(data.volume || data.v || 0),
+        timestamp: data.timestamp || Date.now()
+      };
+    } catch (error) {
+      console.error(`Error fetching data for ${symbol}:`, error);
+      throw error;
+    }
+  };
+
+  // Add stock to watchlist with real-time data
+  const addToWatchlist = async (stock) => {
     if (!isAuthenticated) {
       setError('Please enter passcode to add stocks');
       return;
@@ -138,36 +183,98 @@ const FinageWatchlist = () => {
       return;
     }
 
-    // Generate random price data for demo
-    const randomPrice = Math.random() * 3000 + 500;
-    const randomChange = (Math.random() - 0.5) * 100;
-    const randomVolume = Math.floor(Math.random() * 5000000) + 100000;
+    setLoading(true);
+    setError(null);
 
-    const newStock = {
-      symbol: stock.symbol,
-      name: stock.name,
-      price: randomPrice,
-      change: randomChange,
-      changePercent: (randomChange / randomPrice) * 100,
-      volume: randomVolume,
-      sector: stock.sector,
-      addedAt: Date.now()
-    };
-
-    const newWatchlist = [...watchlist, newStock];
-    setWatchlist(newWatchlist);
-
-    // Save to localStorage
     try {
-      localStorage.setItem('finage-watchlist', JSON.stringify(newWatchlist));
+      // Fetch real-time data from Finage API
+      const realTimeData = await fetchStockData(stock.symbol);
+
+      const newStock = {
+        symbol: stock.symbol,
+        name: stock.name,
+        price: realTimeData.price,
+        change: realTimeData.change,
+        changePercent: realTimeData.changePercent,
+        volume: realTimeData.volume,
+        sector: stock.sector,
+        addedAt: Date.now(),
+        lastUpdated: realTimeData.timestamp
+      };
+
+      const newWatchlist = [...watchlist, newStock];
+      setWatchlist(newWatchlist);
+
+      // Save to localStorage
+      try {
+        localStorage.setItem('finage-watchlist', JSON.stringify(newWatchlist));
+      } catch (error) {
+        console.error('Error saving to localStorage:', error);
+      }
+
+      setSearchQuery('');
+      setSearchResults([]);
+      setShowAddStock(false);
+
     } catch (error) {
-      console.error('Error saving to localStorage:', error);
+      console.error('Error adding stock:', error);
+      setError(`Failed to fetch real-time data for ${stock.symbol}. ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Refresh all stocks with real-time data
+  const refreshAllStocks = async () => {
+    if (!isFinageEnabled) {
+      setError('Finage API not configured');
+      return;
     }
 
-    setSearchQuery('');
-    setSearchResults([]);
-    setShowAddStock(false);
+    if (watchlist.length === 0) {
+      setError('No stocks in watchlist to refresh');
+      return;
+    }
+
+    setLoading(true);
     setError(null);
+
+    try {
+      const updatedStocks = await Promise.all(
+        watchlist.map(async (stock) => {
+          try {
+            const realTimeData = await fetchStockData(stock.symbol);
+            return {
+              ...stock,
+              price: realTimeData.price,
+              change: realTimeData.change,
+              changePercent: realTimeData.changePercent,
+              volume: realTimeData.volume,
+              lastUpdated: realTimeData.timestamp
+            };
+          } catch (error) {
+            console.error(`Error updating ${stock.symbol}:`, error);
+            // Return original stock data if API call fails
+            return stock;
+          }
+        })
+      );
+
+      setWatchlist(updatedStocks);
+
+      // Save to localStorage
+      try {
+        localStorage.setItem('finage-watchlist', JSON.stringify(updatedStocks));
+      } catch (error) {
+        console.error('Error saving to localStorage:', error);
+      }
+
+    } catch (error) {
+      console.error('Error refreshing stocks:', error);
+      setError('Failed to refresh stock data. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Remove stock from watchlist
@@ -190,24 +297,54 @@ const FinageWatchlist = () => {
 
   // Initialize with data from localStorage or sample data
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem('finage-watchlist');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        setWatchlist(parsed);
-      } else {
-        setWatchlist(sampleStocks);
-        localStorage.setItem('finage-watchlist', JSON.stringify(sampleStocks));
-      }
-    } catch (error) {
-      console.error('Error loading from localStorage:', error);
-      setWatchlist(sampleStocks);
-    }
+    const initializeWatchlist = async () => {
+      try {
+        const saved = localStorage.getItem('finage-watchlist');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          setWatchlist(parsed);
 
-    if (!isFinageEnabled) {
-      setError('Finage API not configured. Showing sample data.');
-    }
+          // If API is enabled, refresh with real-time data
+          if (isFinageEnabled && parsed.length > 0) {
+            setTimeout(() => {
+              refreshAllStocks();
+            }, 1000); // Delay to avoid immediate loading
+          }
+        } else {
+          // Initialize with sample data
+          setWatchlist(sampleStocks);
+          localStorage.setItem('finage-watchlist', JSON.stringify(sampleStocks));
+
+          // If API is enabled, get real data for sample stocks
+          if (isFinageEnabled) {
+            setTimeout(() => {
+              refreshAllStocks();
+            }, 1000);
+          }
+        }
+      } catch (error) {
+        console.error('Error loading from localStorage:', error);
+        setWatchlist(sampleStocks);
+      }
+
+      if (!isFinageEnabled) {
+        setError('Finage API not configured. Add your API key to environment variables for real-time data.');
+      }
+    };
+
+    initializeWatchlist();
   }, []);
+
+  // Auto-refresh every 30 seconds when API is enabled
+  useEffect(() => {
+    if (!isFinageEnabled || watchlist.length === 0) return;
+
+    const interval = setInterval(() => {
+      refreshAllStocks();
+    }, 30000); // 30 seconds
+
+    return () => clearInterval(interval);
+  }, [watchlist.length, isFinageEnabled]);
 
   // Search debounce effect
   useEffect(() => {
@@ -248,17 +385,25 @@ const FinageWatchlist = () => {
         </div>
         
         <div className="flex items-center space-x-4">
-          <div className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
-            Market Open
+          <div className={`px-3 py-1 rounded-full text-sm font-medium ${
+            isFinageEnabled ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+          }`}>
+            {isFinageEnabled ? 'Live Data' : 'Demo Mode'}
           </div>
-          
+
+          {watchlist.length > 0 && watchlist[0].lastUpdated && (
+            <div className="text-sm text-gray-500">
+              Last updated: {new Date(watchlist[0].lastUpdated).toLocaleTimeString()}
+            </div>
+          )}
+
           <button
-            onClick={() => setLoading(!loading)}
-            disabled={loading}
+            onClick={refreshAllStocks}
+            disabled={loading || watchlist.length === 0}
             className="flex items-center bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
           >
             <span className={`mr-2 ${loading ? 'animate-spin' : ''}`}>🔄</span>
-            Refresh
+            {loading ? 'Refreshing...' : 'Refresh Live Data'}
           </button>
         </div>
       </div>
@@ -500,12 +645,17 @@ const FinageWatchlist = () => {
       {/* Footer Info */}
       <div className="mt-6 text-center text-sm text-gray-500">
         <p>
-          {isFinageEnabled 
-            ? 'Data provided by Finage API • Updates every 30 seconds when market is open'
-            : 'Sample data shown • Configure Finage API for real-time data'
+          {isFinageEnabled
+            ? '📈 Real-time data from Finage API • Auto-refreshes every 30 seconds • NSE Indian stocks'
+            : '⚠️ Demo mode - Add NEXT_PUBLIC_FINAGE_API_KEY to environment variables for live data'
           }
         </p>
-        <p>Free tier: 1000 requests/month • {watchlist.length} stocks in watchlist</p>
+        <p>
+          {isFinageEnabled
+            ? `Free tier: 1000 requests/month • ${watchlist.length} stocks tracked • API key configured ✅`
+            : `${watchlist.length} sample stocks • Real-time data available with API key`
+          }
+        </p>
       </div>
     </div>
   );
