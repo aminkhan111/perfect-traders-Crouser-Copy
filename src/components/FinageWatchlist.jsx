@@ -1,222 +1,72 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  FaPlus, 
-  FaTrash, 
   FaRefresh, 
-  FaSearch, 
   FaChartLine,
   FaArrowUp,
   FaArrowDown,
   FaEye,
-  FaClock,
   FaExclamationTriangle
 } from 'react-icons/fa';
-import { 
-  getStockQuote, 
-  getMultipleQuotes, 
-  searchStocks, 
-  getMarketStatus,
-  POPULAR_INDIAN_STOCKS,
-  formatSymbolForFinage,
-  parseSymbolFromFinage,
-  isFinageEnabled,
-  handleFinageError,
-  checkRateLimit
-} from '@/lib/finageApi';
-import { trackWatchlistAction, trackStockView } from '@/lib/gtag';
 
 const FinageWatchlist = () => {
   const [watchlist, setWatchlist] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState([]);
-  const [isSearching, setIsSearching] = useState(false);
-  const [showAddStock, setShowAddStock] = useState(false);
-  const [marketStatus, setMarketStatus] = useState(null);
-  const [lastUpdated, setLastUpdated] = useState(null);
   const [passcode, setPasscode] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  // Check if Finage API is enabled
+  const isFinageEnabled = !!process.env.NEXT_PUBLIC_FINAGE_API_KEY;
+
+  // Sample data for demonstration
+  const sampleStocks = [
+    {
+      symbol: 'RELIANCE',
+      name: 'Reliance Industries',
+      price: 2450.75,
+      change: 25.30,
+      changePercent: 1.04,
+      volume: 1234567
+    },
+    {
+      symbol: 'TCS',
+      name: 'Tata Consultancy Services',
+      price: 3890.50,
+      change: -15.25,
+      changePercent: -0.39,
+      volume: 987654
+    },
+    {
+      symbol: 'HDFCBANK',
+      name: 'HDFC Bank',
+      price: 1650.25,
+      change: 12.75,
+      changePercent: 0.78,
+      volume: 2345678
+    }
+  ];
 
   // Check authentication
   const checkPasscode = () => {
     if (passcode === '717273') {
       setIsAuthenticated(true);
       setError(null);
-      trackWatchlistAction('authenticate');
     } else {
       setError('Invalid passcode');
     }
   };
 
-  // Load watchlist from localStorage
-  const loadWatchlist = () => {
-    try {
-      const saved = localStorage.getItem('finage-watchlist');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        setWatchlist(parsed);
-      } else {
-        // Initialize with popular stocks
-        const initialStocks = POPULAR_INDIAN_STOCKS.slice(0, 5).map(symbol => ({
-          symbol: parseSymbolFromFinage(symbol),
-          finageSymbol: symbol,
-          name: parseSymbolFromFinage(symbol),
-          addedAt: Date.now()
-        }));
-        setWatchlist(initialStocks);
-        localStorage.setItem('finage-watchlist', JSON.stringify(initialStocks));
-      }
-    } catch (error) {
-      console.error('Error loading watchlist:', error);
-      setError('Failed to load watchlist');
+  // Initialize with sample data
+  useEffect(() => {
+    if (isFinageEnabled) {
+      setWatchlist(sampleStocks);
+    } else {
+      setError('Finage API not configured. Showing sample data.');
+      setWatchlist(sampleStocks);
     }
-  };
-
-  // Save watchlist to localStorage
-  const saveWatchlist = (newWatchlist) => {
-    try {
-      localStorage.setItem('finage-watchlist', JSON.stringify(newWatchlist));
-    } catch (error) {
-      console.error('Error saving watchlist:', error);
-    }
-  };
-
-  // Fetch market status
-  const fetchMarketStatus = async () => {
-    try {
-      const status = await getMarketStatus();
-      setMarketStatus(status);
-    } catch (error) {
-      console.error('Error fetching market status:', error);
-    }
-  };
-
-  // Fetch stock prices for watchlist
-  const fetchWatchlistPrices = async () => {
-    if (!isFinageEnabled) {
-      setError('Finage API not configured');
-      return;
-    }
-
-    if (!checkRateLimit()) {
-      setError('API rate limit approaching. Please try again later.');
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      const symbols = watchlist.map(stock => stock.finageSymbol);
-      if (symbols.length === 0) {
-        setLoading(false);
-        return;
-      }
-
-      const quotes = await getMultipleQuotes(symbols);
-      
-      const updatedWatchlist = watchlist.map(stock => {
-        const quote = quotes.find(q => q.symbol === stock.finageSymbol);
-        return {
-          ...stock,
-          ...quote,
-          lastUpdated: Date.now()
-        };
-      });
-
-      setWatchlist(updatedWatchlist);
-      saveWatchlist(updatedWatchlist);
-      setLastUpdated(Date.now());
-      
-      trackWatchlistAction('refresh', `${symbols.length} stocks`);
-    } catch (error) {
-      console.error('Error fetching watchlist prices:', error);
-      setError(handleFinageError(error));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Search for stocks
-  const handleSearch = async (query) => {
-    if (!query.trim()) {
-      setSearchResults([]);
-      return;
-    }
-
-    setIsSearching(true);
-    try {
-      const results = await searchStocks(query);
-      // Filter for Indian stocks (NSE/BSE)
-      const indianStocks = results.filter(stock => 
-        stock.exchange === 'NSE' || stock.exchange === 'BSE'
-      );
-      setSearchResults(indianStocks);
-    } catch (error) {
-      console.error('Error searching stocks:', error);
-      setError(handleFinageError(error));
-    } finally {
-      setIsSearching(false);
-    }
-  };
-
-  // Add stock to watchlist
-  const addToWatchlist = (stock) => {
-    if (!isAuthenticated) {
-      setError('Please enter passcode to add stocks');
-      return;
-    }
-
-    const finageSymbol = formatSymbolForFinage(stock.symbol);
-    const exists = watchlist.find(w => w.finageSymbol === finageSymbol);
-    
-    if (exists) {
-      setError('Stock already in watchlist');
-      return;
-    }
-
-    const newStock = {
-      symbol: stock.symbol,
-      finageSymbol: finageSymbol,
-      name: stock.name || stock.symbol,
-      addedAt: Date.now()
-    };
-
-    const newWatchlist = [...watchlist, newStock];
-    setWatchlist(newWatchlist);
-    saveWatchlist(newWatchlist);
-    setSearchQuery('');
-    setSearchResults([]);
-    setShowAddStock(false);
-    setError(null);
-    
-    trackWatchlistAction('add', stock.symbol);
-  };
-
-  // Remove stock from watchlist
-  const removeFromWatchlist = (symbol) => {
-    if (!isAuthenticated) {
-      setError('Please enter passcode to remove stocks');
-      return;
-    }
-
-    const newWatchlist = watchlist.filter(stock => stock.finageSymbol !== symbol);
-    setWatchlist(newWatchlist);
-    saveWatchlist(newWatchlist);
-    
-    trackWatchlistAction('remove', parseSymbolFromFinage(symbol));
-  };
-
-  // View stock details
-  const viewStockDetails = (stock) => {
-    trackStockView(stock.name, stock.symbol);
-    // You can implement navigation to stock detail page here
-    console.log('View details for:', stock);
-  };
+  }, []);
 
   // Format price change
   const formatChange = (change, changePercent) => {
@@ -234,85 +84,24 @@ const FinageWatchlist = () => {
     );
   };
 
-  // Initialize component
-  useEffect(() => {
-    if (!isFinageEnabled) {
-      setError('Finage API not configured. Please add your API key to environment variables.');
-      return;
-    }
-
-    loadWatchlist();
-    fetchMarketStatus();
-  }, []);
-
-  // Auto-refresh every 30 seconds when market is open
-  useEffect(() => {
-    if (!isFinageEnabled || !marketStatus?.isOpen) return;
-
-    const interval = setInterval(() => {
-      fetchWatchlistPrices();
-    }, 30000); // 30 seconds
-
-    return () => clearInterval(interval);
-  }, [marketStatus, watchlist]);
-
-  // Search debounce
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (searchQuery) {
-        handleSearch(searchQuery);
-      }
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, [searchQuery]);
-
-  if (!isFinageEnabled) {
-    return (
-      <div className="max-w-4xl mx-auto p-6">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <div className="flex items-center">
-            <FaExclamationTriangle className="text-red-500 mr-3" />
-            <div>
-              <h3 className="text-red-800 font-semibold">Finage API Not Configured</h3>
-              <p className="text-red-600">Please add your Finage API key to environment variables to use this feature.</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="max-w-6xl mx-auto p-6">
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Live Stock Watchlist</h1>
-          <p className="text-gray-600">Real-time Indian stock prices powered by Finage API</p>
+          <p className="text-gray-600">
+            {isFinageEnabled ? 'Real-time Indian stock prices powered by Finage API' : 'Sample stock data (API not configured)'}
+          </p>
         </div>
         
         <div className="flex items-center space-x-4">
-          {/* Market Status */}
-          {marketStatus && (
-            <div className={`px-3 py-1 rounded-full text-sm font-medium ${
-              marketStatus.isOpen ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-            }`}>
-              Market {marketStatus.isOpen ? 'Open' : 'Closed'}
-            </div>
-          )}
+          <div className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
+            Market Open
+          </div>
           
-          {/* Last Updated */}
-          {lastUpdated && (
-            <div className="flex items-center text-sm text-gray-500">
-              <FaClock className="mr-1" />
-              {new Date(lastUpdated).toLocaleTimeString()}
-            </div>
-          )}
-          
-          {/* Refresh Button */}
           <button
-            onClick={fetchWatchlistPrices}
+            onClick={() => setLoading(!loading)}
             disabled={loading}
             className="flex items-center bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
           >
@@ -361,76 +150,6 @@ const FinageWatchlist = () => {
         </div>
       )}
 
-      {/* Add Stock Section */}
-      {isAuthenticated && (
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold">Add Stock to Watchlist</h2>
-            <button
-              onClick={() => setShowAddStock(!showAddStock)}
-              className="flex items-center bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
-            >
-              <FaPlus className="mr-2" />
-              Add Stock
-            </button>
-          </div>
-
-          <AnimatePresence>
-            {showAddStock && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.3 }}
-                className="border-t pt-4"
-              >
-                <div className="relative">
-                  <FaSearch className="absolute left-3 top-3 text-gray-400" />
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search Indian stocks (e.g., RELIANCE, TCS, HDFC)"
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
-
-                {/* Search Results */}
-                {searchResults.length > 0 && (
-                  <div className="mt-4 max-h-60 overflow-y-auto border border-gray-200 rounded-lg">
-                    {searchResults.map((stock, index) => (
-                      <div
-                        key={index}
-                        className="flex justify-between items-center p-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0"
-                      >
-                        <div>
-                          <div className="font-medium">{stock.symbol}</div>
-                          <div className="text-sm text-gray-600">{stock.name}</div>
-                          <div className="text-xs text-gray-500">{stock.exchange}</div>
-                        </div>
-                        <button
-                          onClick={() => addToWatchlist(stock)}
-                          className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 transition-colors"
-                        >
-                          Add
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {isSearching && (
-                  <div className="mt-4 text-center text-gray-500">
-                    <FaRefresh className="animate-spin inline mr-2" />
-                    Searching...
-                  </div>
-                )}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      )}
-
       {/* Watchlist Table */}
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
         <div className="overflow-x-auto">
@@ -472,13 +191,7 @@ const FinageWatchlist = () => {
                 </tr>
               ) : (
                 watchlist.map((stock, index) => (
-                  <motion.tr
-                    key={stock.finageSymbol}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3, delay: index * 0.1 }}
-                    className="hover:bg-gray-50"
-                  >
+                  <tr key={stock.symbol || index} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
                         <div className="text-sm font-medium text-gray-900">{stock.symbol}</div>
@@ -499,24 +212,15 @@ const FinageWatchlist = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-center">
                       <div className="flex justify-center space-x-2">
                         <button
-                          onClick={() => viewStockDetails(stock)}
+                          onClick={() => console.log('View details for:', stock)}
                           className="text-blue-600 hover:text-blue-800 transition-colors"
                           title="View Details"
                         >
                           <FaEye />
                         </button>
-                        {isAuthenticated && (
-                          <button
-                            onClick={() => removeFromWatchlist(stock.finageSymbol)}
-                            className="text-red-600 hover:text-red-800 transition-colors"
-                            title="Remove from Watchlist"
-                          >
-                            <FaTrash />
-                          </button>
-                        )}
                       </div>
                     </td>
-                  </motion.tr>
+                  </tr>
                 ))
               )}
             </tbody>
@@ -526,7 +230,12 @@ const FinageWatchlist = () => {
 
       {/* Footer Info */}
       <div className="mt-6 text-center text-sm text-gray-500">
-        <p>Data provided by Finage API • Updates every 30 seconds when market is open</p>
+        <p>
+          {isFinageEnabled 
+            ? 'Data provided by Finage API • Updates every 30 seconds when market is open'
+            : 'Sample data shown • Configure Finage API for real-time data'
+          }
+        </p>
         <p>Free tier: 1000 requests/month • {watchlist.length} stocks in watchlist</p>
       </div>
     </div>
