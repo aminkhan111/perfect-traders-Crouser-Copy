@@ -22,44 +22,72 @@ export async function POST(request) {
 
     console.log(`Fetching data for symbols: ${symbols.join(', ')}`);
 
-    // Fetch data for all symbols using individual API calls
+    // Fetch data for all symbols using individual API calls with multiple format attempts
     const results = await Promise.allSettled(
       symbols.map(async (symbol) => {
         console.log(`Fetching batch data for: ${symbol}`);
 
-        const finageUrl = `https://api.finage.co.uk/last/stock/${symbol}?apikey=${apiKey}`;
+        // Try different symbol formats
+        const symbolFormats = [
+          symbol,
+          `${symbol}.NSE`,
+          `${symbol}.BSE`,
+          `NSE:${symbol}`,
+          `BSE:${symbol}`,
+        ];
 
-        const response = await fetch(finageUrl, {
-          method: 'GET',
-          headers: {
-            'Accept': 'application/json',
-            'User-Agent': 'PerfectTraders/1.0',
-          },
-        });
+        for (const symbolFormat of symbolFormats) {
+          try {
+            const finageUrl = `https://api.finage.co.uk/last/stock/${symbolFormat}?apikey=${apiKey}`;
+            console.log(`Batch trying format: ${symbolFormat}`);
 
-        if (response.ok) {
-          const data = await response.json();
-          console.log(`Batch success for ${symbol}:`, data);
+            const response = await fetch(finageUrl, {
+              method: 'GET',
+              headers: {
+                'Accept': 'application/json',
+                'User-Agent': 'PerfectTraders/1.0',
+              },
+            });
 
-          if (data && (data.price || data.c || data.close)) {
-            return {
-              symbol: data.symbol || symbol,
-              price: parseFloat(data.price || data.c || data.close || 0),
-              change: parseFloat(data.change || data.d || 0),
-              changePercent: parseFloat(data.changePercent || data.dp || 0),
-              volume: parseInt(data.volume || data.v || 0),
-              timestamp: Date.now(),
-              source: 'finage',
-              success: true
-            };
-          } else {
-            throw new Error('Invalid data structure from Finage API');
+            if (response.ok) {
+              const data = await response.json();
+              console.log(`Batch success for ${symbolFormat}:`, data);
+
+              if (data && (data.price || data.c || data.close)) {
+                return {
+                  symbol: data.symbol || symbol,
+                  price: parseFloat(data.price || data.c || data.close || 0),
+                  change: parseFloat(data.change || data.d || 0),
+                  changePercent: parseFloat(data.changePercent || data.dp || 0),
+                  volume: parseInt(data.volume || data.v || 0),
+                  timestamp: Date.now(),
+                  source: 'finage',
+                  success: true,
+                  symbolFormat: symbolFormat
+                };
+              }
+            } else {
+              const errorText = await response.text();
+              console.log(`Batch error for ${symbolFormat}: ${response.status} - ${errorText}`);
+
+              // If it's an auth or rate limit error, don't try other formats
+              if (response.status === 401 || response.status === 429) {
+                throw new Error(`HTTP ${response.status}: ${errorText}`);
+              }
+              // Continue to next format for other errors
+            }
+          } catch (error) {
+            console.log(`Batch format ${symbolFormat} failed:`, error.message);
+            // If it's a critical error, stop trying
+            if (error.message.includes('401') || error.message.includes('429')) {
+              throw error;
+            }
+            // Continue to next format
           }
-        } else {
-          const errorText = await response.text();
-          console.log(`Batch error for ${symbol}: ${response.status} - ${errorText}`);
-          throw new Error(`HTTP ${response.status}: ${errorText}`);
         }
+
+        // If all formats failed
+        throw new Error(`All symbol formats failed for ${symbol}`);
       })
     );
 

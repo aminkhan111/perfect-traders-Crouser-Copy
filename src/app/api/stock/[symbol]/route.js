@@ -19,68 +19,91 @@ export async function GET(request, { params }) {
   }
 
   try {
-    // First, let's try the correct Finage API format for Indian stocks
+    // Try different symbol formats for Indian stocks
     console.log(`Fetching data for symbol: ${symbol}`);
     console.log(`Using API key: ${apiKey.substring(0, 10)}...`);
 
-    // Correct Finage API endpoint for Indian stocks
-    const finageUrl = `https://api.finage.co.uk/last/stock/${symbol}?apikey=${apiKey}`;
+    // Different symbol formats to try for Indian stocks
+    const symbolFormats = [
+      symbol,                    // Original symbol (e.g., SBIN)
+      `${symbol}.NSE`,          // NSE format (e.g., SBIN.NSE)
+      `${symbol}.BSE`,          // BSE format (e.g., SBIN.BSE)
+      `NSE:${symbol}`,          // Alternative NSE format
+      `BSE:${symbol}`,          // Alternative BSE format
+    ];
 
-    console.log(`Calling Finage API: ${finageUrl}`);
+    let lastError = null;
 
-    const response = await fetch(finageUrl, {
-      method: 'GET',
-      headers: {
-        'Accept': 'application/json',
-        'User-Agent': 'PerfectTraders/1.0',
-      },
-    });
+    for (const symbolFormat of symbolFormats) {
+      try {
+        const finageUrl = `https://api.finage.co.uk/last/stock/${symbolFormat}?apikey=${apiKey}`;
+        console.log(`Trying symbol format: ${symbolFormat}`);
+        console.log(`Calling Finage API: ${finageUrl}`);
 
-    console.log(`Finage API Response Status: ${response.status}`);
+        const response = await fetch(finageUrl, {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json',
+            'User-Agent': 'PerfectTraders/1.0',
+          },
+        });
 
-    if (response.ok) {
-      const data = await response.json();
-      console.log(`Finage API Success Data:`, JSON.stringify(data, null, 2));
+        console.log(`Finage API Response Status for ${symbolFormat}: ${response.status}`);
 
-      // Check if we got valid data
-      if (data && (data.price || data.c || data.close)) {
-        const price = parseFloat(data.price || data.c || data.close || 0);
-        const change = parseFloat(data.change || data.d || 0);
-        const changePercent = parseFloat(data.changePercent || data.dp || 0);
-        const volume = parseInt(data.volume || data.v || 0);
+        if (response.ok) {
+          const data = await response.json();
+          console.log(`Finage API Success Data for ${symbolFormat}:`, JSON.stringify(data, null, 2));
 
-        const normalizedData = {
-          symbol: data.symbol || symbol,
-          price: price,
-          change: change,
-          changePercent: changePercent,
-          volume: volume,
-          timestamp: Date.now(),
-          source: 'finage',
-          success: true,
-          rawData: data // Include raw data for debugging
-        };
+          // Check if we got valid data
+          if (data && (data.price || data.c || data.close)) {
+            const price = parseFloat(data.price || data.c || data.close || 0);
+            const change = parseFloat(data.change || data.d || 0);
+            const changePercent = parseFloat(data.changePercent || data.dp || 0);
+            const volume = parseInt(data.volume || data.v || 0);
 
-        console.log(`Returning normalized data:`, normalizedData);
-        return NextResponse.json(normalizedData);
-      } else {
-        console.log(`Invalid data structure from Finage:`, data);
-        throw new Error('Invalid data structure from Finage API');
-      }
-    } else {
-      const errorText = await response.text();
-      console.log(`Finage API Error: ${response.status} - ${errorText}`);
+            const normalizedData = {
+              symbol: data.symbol || symbol,
+              price: price,
+              change: change,
+              changePercent: changePercent,
+              volume: volume,
+              timestamp: Date.now(),
+              source: 'finage',
+              success: true,
+              symbolFormat: symbolFormat, // Show which format worked
+              rawData: data // Include raw data for debugging
+            };
 
-      if (response.status === 401) {
-        throw new Error('Invalid API key - Please check your Finage API key');
-      } else if (response.status === 429) {
-        throw new Error('Rate limit exceeded - Please wait before making more requests');
-      } else if (response.status === 404) {
-        throw new Error(`Stock symbol ${symbol} not found`);
-      } else {
-        throw new Error(`Finage API error: ${response.status} - ${errorText}`);
+            console.log(`SUCCESS: Returning normalized data for ${symbolFormat}:`, normalizedData);
+            return NextResponse.json(normalizedData);
+          } else {
+            console.log(`Invalid data structure from Finage for ${symbolFormat}:`, data);
+            lastError = new Error(`Invalid data structure from Finage API for ${symbolFormat}`);
+          }
+        } else {
+          const errorText = await response.text();
+          console.log(`Finage API Error for ${symbolFormat}: ${response.status} - ${errorText}`);
+
+          if (response.status === 401) {
+            lastError = new Error('Invalid API key - Please check your Finage API key');
+            break; // Don't try other formats if API key is invalid
+          } else if (response.status === 429) {
+            lastError = new Error('Rate limit exceeded - Please wait before making more requests');
+            break; // Don't try other formats if rate limited
+          } else {
+            lastError = new Error(`Finage API error for ${symbolFormat}: ${response.status} - ${errorText}`);
+          }
+        }
+      } catch (error) {
+        console.log(`Error with symbol format ${symbolFormat}:`, error.message);
+        lastError = error;
+        continue; // Try next format
       }
     }
+
+    // If we get here, all symbol formats failed
+    console.log(`All symbol formats failed for ${symbol}. Last error:`, lastError?.message);
+    throw lastError || new Error(`All symbol formats failed for ${symbol}`);
 
   } catch (error) {
     console.error(`API route error for ${symbol}:`, error);

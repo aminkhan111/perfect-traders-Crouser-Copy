@@ -13,46 +13,67 @@ export async function GET() {
   try {
     console.log('Testing Finage API...');
     console.log(`API Key: ${apiKey.substring(0, 10)}...${apiKey.substring(apiKey.length - 5)}`);
-    
-    // Test with a simple stock symbol
-    const testSymbol = 'RELIANCE';
-    const testUrl = `https://api.finage.co.uk/last/stock/${testSymbol}?apikey=${apiKey}`;
-    
-    console.log(`Test URL: ${testUrl}`);
-    
-    const response = await fetch(testUrl, {
-      method: 'GET',
-      headers: {
-        'Accept': 'application/json',
-        'User-Agent': 'PerfectTraders/1.0',
-      },
-    });
 
-    console.log(`Response Status: ${response.status}`);
-    console.log(`Response Headers:`, Object.fromEntries(response.headers.entries()));
-    
-    const responseText = await response.text();
-    console.log(`Response Text: ${responseText}`);
-    
-    let data;
-    try {
-      data = JSON.parse(responseText);
-    } catch (parseError) {
-      return NextResponse.json({
-        error: 'Failed to parse JSON response',
-        status: response.status,
-        responseText: responseText,
-        parseError: parseError.message
-      });
+    // Test with different symbol formats
+    const testSymbols = ['RELIANCE', 'RELIANCE.NSE', 'NSE:RELIANCE', 'SBIN', 'SBIN.NSE'];
+    const testResults = [];
+
+    for (const testSymbol of testSymbols) {
+      const testUrl = `https://api.finage.co.uk/last/stock/${testSymbol}?apikey=${apiKey}`;
+
+      console.log(`Testing symbol: ${testSymbol}`);
+      console.log(`Test URL: ${testUrl}`);
+
+      try {
+        const response = await fetch(testUrl, {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json',
+            'User-Agent': 'PerfectTraders/1.0',
+          },
+        });
+
+        console.log(`Response Status for ${testSymbol}: ${response.status}`);
+
+        const responseText = await response.text();
+        console.log(`Response Text for ${testSymbol}: ${responseText}`);
+
+        let data;
+        try {
+          data = JSON.parse(responseText);
+        } catch (parseError) {
+          data = { parseError: parseError.message, rawText: responseText };
+        }
+
+        testResults.push({
+          symbol: testSymbol,
+          url: testUrl,
+          status: response.status,
+          success: response.ok,
+          data: data,
+          headers: Object.fromEntries(response.headers.entries())
+        });
+
+        // If we found a working format, we can stop
+        if (response.ok && data && (data.price || data.c || data.close)) {
+          console.log(`Found working format: ${testSymbol}`);
+          break;
+        }
+      } catch (error) {
+        testResults.push({
+          symbol: testSymbol,
+          url: testUrl,
+          error: error.message,
+          success: false
+        });
+      }
     }
 
     return NextResponse.json({
-      success: response.ok,
-      status: response.status,
       apiKey: `${apiKey.substring(0, 10)}...${apiKey.substring(apiKey.length - 5)}`,
-      testSymbol: testSymbol,
-      testUrl: testUrl,
-      responseData: data,
+      testResults: testResults,
+      workingFormats: testResults.filter(r => r.success),
+      failedFormats: testResults.filter(r => !r.success),
       timestamp: new Date().toISOString()
     });
 
