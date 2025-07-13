@@ -3,10 +3,17 @@ import { NextResponse } from 'next/server';
 export async function GET() {
   const apiKey = process.env.NEXT_PUBLIC_FINAGE_API_KEY;
 
+  console.log('=== FINAGE API TEST START ===');
+  console.log('Environment variables check:');
+  console.log('NEXT_PUBLIC_FINAGE_API_KEY exists:', !!apiKey);
+  console.log('API Key length:', apiKey?.length);
+  console.log('API Key preview:', apiKey ? `${apiKey.substring(0, 15)}...${apiKey.substring(apiKey.length - 5)}` : 'NOT FOUND');
+
   if (!apiKey) {
     return NextResponse.json({
       error: 'Finage API key not configured',
-      envCheck: 'NEXT_PUBLIC_FINAGE_API_KEY not found'
+      envCheck: 'NEXT_PUBLIC_FINAGE_API_KEY not found',
+      allEnvVars: Object.keys(process.env).filter(key => key.includes('FINAGE') || key.includes('API'))
     }, { status: 500 });
   }
 
@@ -14,58 +21,97 @@ export async function GET() {
     console.log('Testing Finage API...');
     console.log(`API Key: ${apiKey.substring(0, 10)}...${apiKey.substring(apiKey.length - 5)}`);
 
-    // Test with different symbol formats
-    const testSymbols = ['RELIANCE', 'RELIANCE.NSE', 'NSE:RELIANCE', 'SBIN', 'SBIN.NSE'];
+    // First, test basic API connectivity
+    console.log('=== TESTING BASIC API CONNECTIVITY ===');
+
+    // Test 1: Basic API endpoint without stock symbol
+    try {
+      const basicUrl = `https://api.finage.co.uk?apikey=${apiKey}`;
+      console.log(`Testing basic connectivity: ${basicUrl}`);
+
+      const basicResponse = await fetch(basicUrl, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'User-Agent': 'PerfectTraders/1.0',
+        },
+      });
+
+      console.log(`Basic API Status: ${basicResponse.status}`);
+      const basicText = await basicResponse.text();
+      console.log(`Basic API Response: ${basicText}`);
+    } catch (error) {
+      console.log(`Basic API Error: ${error.message}`);
+    }
+
+    // Test 2: Try different base URLs and endpoints
+    const baseUrls = [
+      'https://api.finage.co.uk',
+      'https://api.finage.co.in',
+      'https://finage.co.uk/api',
+    ];
+
+    const endpoints = [
+      '/last/stock/AAPL',
+      '/stock/last/AAPL',
+      '/v1/last/stock/AAPL',
+      '/api/v1/last/stock/AAPL'
+    ];
+
+    console.log('=== TESTING DIFFERENT API ENDPOINTS ===');
     const testResults = [];
 
-    for (const testSymbol of testSymbols) {
-      const testUrl = `https://api.finage.co.uk/last/stock/${testSymbol}?apikey=${apiKey}`;
+    for (const baseUrl of baseUrls) {
+      for (const endpoint of endpoints) {
+        const testUrl = `${baseUrl}${endpoint}?apikey=${apiKey}`;
 
-      console.log(`Testing symbol: ${testSymbol}`);
-      console.log(`Test URL: ${testUrl}`);
-
-      try {
-        const response = await fetch(testUrl, {
-          method: 'GET',
-          headers: {
-            'Accept': 'application/json',
-            'User-Agent': 'PerfectTraders/1.0',
-          },
-        });
-
-        console.log(`Response Status for ${testSymbol}: ${response.status}`);
-
-        const responseText = await response.text();
-        console.log(`Response Text for ${testSymbol}: ${responseText}`);
-
-        let data;
         try {
-          data = JSON.parse(responseText);
-        } catch (parseError) {
-          data = { parseError: parseError.message, rawText: responseText };
-        }
+          console.log(`Testing: ${testUrl}`);
 
-        testResults.push({
-          symbol: testSymbol,
-          url: testUrl,
-          status: response.status,
-          success: response.ok,
-          data: data,
-          headers: Object.fromEntries(response.headers.entries())
-        });
+          const response = await fetch(testUrl, {
+            method: 'GET',
+            headers: {
+              'Accept': 'application/json',
+              'User-Agent': 'PerfectTraders/1.0',
+            },
+            timeout: 10000 // 10 second timeout
+          });
 
-        // If we found a working format, we can stop
-        if (response.ok && data && (data.price || data.c || data.close)) {
-          console.log(`Found working format: ${testSymbol}`);
-          break;
+          const responseText = await response.text();
+          console.log(`Status: ${response.status}, Response: ${responseText.substring(0, 200)}...`);
+
+          let data;
+          try {
+            data = JSON.parse(responseText);
+          } catch (parseError) {
+            data = { parseError: parseError.message, rawText: responseText.substring(0, 500) };
+          }
+
+          testResults.push({
+            baseUrl,
+            endpoint,
+            fullUrl: testUrl,
+            status: response.status,
+            success: response.ok,
+            data: data,
+            headers: Object.fromEntries(response.headers.entries())
+          });
+
+          // If we found a working endpoint, note it
+          if (response.ok) {
+            console.log(`✅ WORKING ENDPOINT FOUND: ${testUrl}`);
+          }
+
+        } catch (error) {
+          console.log(`❌ Error with ${testUrl}: ${error.message}`);
+          testResults.push({
+            baseUrl,
+            endpoint,
+            fullUrl: testUrl,
+            error: error.message,
+            success: false
+          });
         }
-      } catch (error) {
-        testResults.push({
-          symbol: testSymbol,
-          url: testUrl,
-          error: error.message,
-          success: false
-        });
       }
     }
 

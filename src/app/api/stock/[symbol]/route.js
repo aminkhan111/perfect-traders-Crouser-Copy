@@ -101,9 +101,66 @@ export async function GET(request, { params }) {
       }
     }
 
-    // If we get here, all symbol formats failed
-    console.log(`All symbol formats failed for ${symbol}. Last error:`, lastError?.message);
-    throw lastError || new Error(`All symbol formats failed for ${symbol}`);
+    // If Finage failed, try Yahoo Finance as fallback
+    console.log(`All Finage symbol formats failed for ${symbol}. Trying Yahoo Finance fallback...`);
+
+    try {
+      // Try Yahoo Finance directly
+      const yahooSymbolFormats = [`${symbol}.NS`, `${symbol}.BO`, symbol];
+
+      for (const yahooSymbol of yahooSymbolFormats) {
+        try {
+          const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${yahooSymbol}`;
+          console.log(`Trying Yahoo Finance: ${yahooUrl}`);
+
+          const yahooResponse = await fetch(yahooUrl, {
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+              'Accept': 'application/json',
+            },
+          });
+
+          if (yahooResponse.ok) {
+            const yahooData = await yahooResponse.json();
+            const chart = yahooData?.chart?.result?.[0];
+
+            if (chart && chart.meta) {
+              const meta = chart.meta;
+              const currentPrice = meta.regularMarketPrice || meta.previousClose || 0;
+              const previousClose = meta.previousClose || currentPrice;
+              const change = currentPrice - previousClose;
+              const changePercent = previousClose > 0 ? (change / previousClose) * 100 : 0;
+
+              const normalizedData = {
+                symbol: meta.symbol || symbol,
+                price: parseFloat(currentPrice),
+                change: parseFloat(change),
+                changePercent: parseFloat(changePercent),
+                volume: parseInt(meta.regularMarketVolume || 0),
+                timestamp: Date.now(),
+                source: 'yahoo-fallback',
+                success: true,
+                symbolFormat: yahooSymbol,
+                note: 'Finage API failed, using Yahoo Finance as fallback'
+              };
+
+              console.log(`Yahoo Finance fallback SUCCESS for ${yahooSymbol}:`, normalizedData);
+              return NextResponse.json(normalizedData);
+            }
+          }
+        } catch (yahooError) {
+          console.log(`Yahoo Finance format ${yahooSymbol} failed:`, yahooError.message);
+          continue;
+        }
+      }
+
+      console.log(`Yahoo Finance fallback also failed for all formats`);
+    } catch (yahooError) {
+      console.log(`Yahoo Finance fallback error for ${symbol}:`, yahooError.message);
+    }
+
+    // If both APIs failed
+    throw lastError || new Error(`Both Finage and Yahoo Finance failed for ${symbol}`);
 
   } catch (error) {
     console.error(`API route error for ${symbol}:`, error);

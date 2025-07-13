@@ -453,7 +453,16 @@ const FinageWatchlist = () => {
             className="flex items-center bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors"
           >
             <span className={`mr-2 ${loading ? 'animate-spin' : ''}`}>🧪</span>
-            Test API
+            Test Finage
+          </button>
+
+          <button
+            onClick={() => window.open('/api/test-alternatives', '_blank')}
+            disabled={loading}
+            className="flex items-center bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 disabled:opacity-50 transition-colors"
+          >
+            <span className="mr-2">🔄</span>
+            Test Alternatives
           </button>
 
           <button
