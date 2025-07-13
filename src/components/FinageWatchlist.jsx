@@ -12,6 +12,7 @@ const FinageWatchlist = () => {
   const [searchResults, setSearchResults] = useState([]);
   const [showAddStock, setShowAddStock] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
+  const [debugInfo, setDebugInfo] = useState(null);
 
   // Check if Finage API is enabled
   const isFinageEnabled = !!process.env.NEXT_PUBLIC_FINAGE_API_KEY;
@@ -126,15 +127,29 @@ const FinageWatchlist = () => {
 
   // Fetch real-time stock data via our API route (bypasses CORS)
   const fetchStockData = async (symbol) => {
+    console.log(`Fetching data for symbol: ${symbol}`);
+
     try {
       const response = await fetch(`/api/stock/${symbol}`);
+      console.log(`API Response status: ${response.status}`);
 
       if (!response.ok) {
         const errorData = await response.json();
+        console.error(`API Error for ${symbol}:`, errorData);
         throw new Error(errorData.error || `API Error: ${response.status}`);
       }
 
       const data = await response.json();
+      console.log(`API Success data for ${symbol}:`, data);
+
+      // Validate that we got real data
+      if (data.source === 'error') {
+        throw new Error(data.details || 'API returned error');
+      }
+
+      if (!data.price || data.price === 0) {
+        throw new Error('No valid price data received from API');
+      }
 
       return {
         symbol: data.symbol || symbol,
@@ -143,7 +158,8 @@ const FinageWatchlist = () => {
         changePercent: parseFloat(data.changePercent || 0),
         volume: parseInt(data.volume || 0),
         timestamp: data.timestamp || Date.now(),
-        source: data.source || 'api'
+        source: data.source || 'api',
+        success: data.success || false
       };
     } catch (error) {
       console.error(`Error fetching data for ${symbol}:`, error);
@@ -279,6 +295,29 @@ const FinageWatchlist = () => {
     }
   };
 
+  // Test Finage API
+  const testFinageAPI = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch('/api/test-finage');
+      const result = await response.json();
+
+      setDebugInfo(result);
+
+      if (result.success) {
+        setError(`✅ Finage API Test Successful! Got data: ${JSON.stringify(result.responseData)}`);
+      } else {
+        setError(`❌ Finage API Test Failed: ${result.error || 'Unknown error'}`);
+      }
+    } catch (error) {
+      setError(`❌ Test API Error: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Remove stock from watchlist
   const removeFromWatchlist = (symbol) => {
     if (!isAuthenticated) {
@@ -407,6 +446,15 @@ const FinageWatchlist = () => {
               {watchlist[0].source === 'finage' ? '📡 Live Data' : '🎭 Demo Data'}
             </div>
           )}
+
+          <button
+            onClick={testFinageAPI}
+            disabled={loading}
+            className="flex items-center bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors"
+          >
+            <span className={`mr-2 ${loading ? 'animate-spin' : ''}`}>🧪</span>
+            Test API
+          </button>
 
           <button
             onClick={refreshAllStocks}
@@ -652,6 +700,16 @@ const FinageWatchlist = () => {
           </table>
         </div>
       </div>
+
+      {/* Debug Info */}
+      {debugInfo && (
+        <div className="mt-6 bg-gray-100 rounded-lg p-4">
+          <h3 className="font-semibold text-gray-900 mb-2">🧪 API Debug Info:</h3>
+          <pre className="text-xs text-gray-700 overflow-auto max-h-40">
+            {JSON.stringify(debugInfo, null, 2)}
+          </pre>
+        </div>
+      )}
 
       {/* Footer Info */}
       <div className="mt-6 text-center text-sm text-gray-500">

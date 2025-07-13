@@ -19,82 +19,80 @@ export async function GET(request, { params }) {
   }
 
   try {
-    // Try different Finage API endpoints
-    const endpoints = [
-      `https://api.finage.co.uk/last/stock/${symbol}?apikey=${apiKey}`,
-      `https://api.finage.co.uk/last/stock/${symbol}.NSE?apikey=${apiKey}`,
-      `https://api.finage.co.uk/last/stock/${symbol}.BSE?apikey=${apiKey}`,
-    ];
+    // First, let's try the correct Finage API format for Indian stocks
+    console.log(`Fetching data for symbol: ${symbol}`);
+    console.log(`Using API key: ${apiKey.substring(0, 10)}...`);
 
-    let lastError = null;
-    
-    for (const endpoint of endpoints) {
-      try {
-        console.log(`Trying endpoint: ${endpoint}`);
-        
-        const response = await fetch(endpoint, {
-          method: 'GET',
-          headers: {
-            'Accept': 'application/json',
-            'User-Agent': 'PerfectTraders/1.0',
-          },
-        });
+    // Correct Finage API endpoint for Indian stocks
+    const finageUrl = `https://api.finage.co.uk/last/stock/${symbol}?apikey=${apiKey}`;
 
-        console.log(`Response status: ${response.status}`);
-        
-        if (response.ok) {
-          const data = await response.json();
-          console.log(`Success data:`, data);
-          
-          // Normalize the response data
-          const normalizedData = {
-            symbol: data.symbol || symbol,
-            price: data.price || data.c || data.close || 0,
-            change: data.change || data.d || 0,
-            changePercent: data.changePercent || data.dp || 0,
-            volume: data.volume || data.v || 0,
-            timestamp: data.timestamp || Date.now(),
-            source: 'finage',
-            endpoint: endpoint
-          };
+    console.log(`Calling Finage API: ${finageUrl}`);
 
-          return NextResponse.json(normalizedData);
-        } else {
-          const errorText = await response.text();
-          console.log(`Error response: ${response.status} - ${errorText}`);
-          lastError = new Error(`HTTP ${response.status}: ${errorText}`);
-        }
-      } catch (error) {
-        console.log(`Endpoint failed: ${endpoint} - ${error.message}`);
-        lastError = error;
-        continue;
+    const response = await fetch(finageUrl, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'User-Agent': 'PerfectTraders/1.0',
+      },
+    });
+
+    console.log(`Finage API Response Status: ${response.status}`);
+
+    if (response.ok) {
+      const data = await response.json();
+      console.log(`Finage API Success Data:`, JSON.stringify(data, null, 2));
+
+      // Check if we got valid data
+      if (data && (data.price || data.c || data.close)) {
+        const price = parseFloat(data.price || data.c || data.close || 0);
+        const change = parseFloat(data.change || data.d || 0);
+        const changePercent = parseFloat(data.changePercent || data.dp || 0);
+        const volume = parseInt(data.volume || data.v || 0);
+
+        const normalizedData = {
+          symbol: data.symbol || symbol,
+          price: price,
+          change: change,
+          changePercent: changePercent,
+          volume: volume,
+          timestamp: Date.now(),
+          source: 'finage',
+          success: true,
+          rawData: data // Include raw data for debugging
+        };
+
+        console.log(`Returning normalized data:`, normalizedData);
+        return NextResponse.json(normalizedData);
+      } else {
+        console.log(`Invalid data structure from Finage:`, data);
+        throw new Error('Invalid data structure from Finage API');
+      }
+    } else {
+      const errorText = await response.text();
+      console.log(`Finage API Error: ${response.status} - ${errorText}`);
+
+      if (response.status === 401) {
+        throw new Error('Invalid API key - Please check your Finage API key');
+      } else if (response.status === 429) {
+        throw new Error('Rate limit exceeded - Please wait before making more requests');
+      } else if (response.status === 404) {
+        throw new Error(`Stock symbol ${symbol} not found`);
+      } else {
+        throw new Error(`Finage API error: ${response.status} - ${errorText}`);
       }
     }
 
-    // If all endpoints failed, try a mock response for testing
-    console.log('All Finage endpoints failed, returning mock data');
-    
-    const mockData = {
-      symbol: symbol,
-      price: Math.random() * 3000 + 500,
-      change: (Math.random() - 0.5) * 100,
-      changePercent: (Math.random() - 0.5) * 5,
-      volume: Math.floor(Math.random() * 5000000) + 100000,
-      timestamp: Date.now(),
-      source: 'mock',
-      note: 'Mock data - Finage API endpoints failed'
-    };
-
-    return NextResponse.json(mockData);
-
   } catch (error) {
-    console.error('API route error:', error);
-    
+    console.error(`API route error for ${symbol}:`, error);
+
+    // Return error instead of mock data - we want to know when API fails
     return NextResponse.json(
-      { 
-        error: 'Failed to fetch stock data',
+      {
+        error: 'Failed to fetch real-time stock data',
         details: error.message,
-        symbol: symbol
+        symbol: symbol,
+        source: 'error',
+        timestamp: Date.now()
       },
       { status: 500 }
     );

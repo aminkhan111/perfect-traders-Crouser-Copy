@@ -552,6 +552,7 @@ const UnlistedShares = () => {
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">
                   {benefit.title}
+             
                 </h3>
                 <p className="text-gray-600">
                   {benefit.description}

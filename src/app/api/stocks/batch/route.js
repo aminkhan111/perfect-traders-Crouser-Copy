@@ -22,86 +22,71 @@ export async function POST(request) {
 
     console.log(`Fetching data for symbols: ${symbols.join(', ')}`);
 
-    // Fetch data for all symbols
+    // Fetch data for all symbols using individual API calls
     const results = await Promise.allSettled(
       symbols.map(async (symbol) => {
-        // Try different endpoints for each symbol
-        const endpoints = [
-          `https://api.finage.co.uk/last/stock/${symbol}?apikey=${apiKey}`,
-          `https://api.finage.co.uk/last/stock/${symbol}.NSE?apikey=${apiKey}`,
-          `https://api.finage.co.uk/last/stock/${symbol}.BSE?apikey=${apiKey}`,
-        ];
+        console.log(`Fetching batch data for: ${symbol}`);
 
-        for (const endpoint of endpoints) {
-          try {
-            const response = await fetch(endpoint, {
-              method: 'GET',
-              headers: {
-                'Accept': 'application/json',
-                'User-Agent': 'PerfectTraders/1.0',
-              },
-            });
+        const finageUrl = `https://api.finage.co.uk/last/stock/${symbol}?apikey=${apiKey}`;
 
-            if (response.ok) {
-              const data = await response.json();
-              
-              return {
-                symbol: data.symbol || symbol,
-                price: data.price || data.c || data.close || 0,
-                change: data.change || data.d || 0,
-                changePercent: data.changePercent || data.dp || 0,
-                volume: data.volume || data.v || 0,
-                timestamp: data.timestamp || Date.now(),
-                source: 'finage',
-                success: true
-              };
-            }
-          } catch (error) {
-            console.log(`Endpoint failed for ${symbol}: ${endpoint}`);
-            continue;
+        const response = await fetch(finageUrl, {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json',
+            'User-Agent': 'PerfectTraders/1.0',
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          console.log(`Batch success for ${symbol}:`, data);
+
+          if (data && (data.price || data.c || data.close)) {
+            return {
+              symbol: data.symbol || symbol,
+              price: parseFloat(data.price || data.c || data.close || 0),
+              change: parseFloat(data.change || data.d || 0),
+              changePercent: parseFloat(data.changePercent || data.dp || 0),
+              volume: parseInt(data.volume || data.v || 0),
+              timestamp: Date.now(),
+              source: 'finage',
+              success: true
+            };
+          } else {
+            throw new Error('Invalid data structure from Finage API');
           }
+        } else {
+          const errorText = await response.text();
+          console.log(`Batch error for ${symbol}: ${response.status} - ${errorText}`);
+          throw new Error(`HTTP ${response.status}: ${errorText}`);
         }
-
-        // If all endpoints failed, return mock data
-        return {
-          symbol: symbol,
-          price: Math.random() * 3000 + 500,
-          change: (Math.random() - 0.5) * 100,
-          changePercent: (Math.random() - 0.5) * 5,
-          volume: Math.floor(Math.random() * 5000000) + 100000,
-          timestamp: Date.now(),
-          source: 'mock',
-          success: false,
-          note: 'Using mock data - API endpoints failed'
-        };
       })
     );
 
-    // Process results
-    const stockData = results.map((result, index) => {
+    // Process results - only return successful ones
+    const stockData = [];
+    const errors = [];
+
+    results.forEach((result, index) => {
       if (result.status === 'fulfilled') {
-        return result.value;
+        stockData.push(result.value);
       } else {
-        // Return mock data for failed requests
-        return {
+        errors.push({
           symbol: symbols[index],
-          price: Math.random() * 3000 + 500,
-          change: (Math.random() - 0.5) * 100,
-          changePercent: (Math.random() - 0.5) * 5,
-          volume: Math.floor(Math.random() * 5000000) + 100000,
-          timestamp: Date.now(),
-          source: 'mock',
-          success: false,
           error: result.reason?.message || 'Unknown error'
-        };
+        });
+        console.error(`Failed to fetch ${symbols[index]}:`, result.reason);
       }
     });
 
     return NextResponse.json({
-      success: true,
+      success: stockData.length > 0,
       data: stockData,
+      errors: errors,
       timestamp: Date.now(),
-      count: stockData.length
+      successCount: stockData.length,
+      errorCount: errors.length,
+      totalRequested: symbols.length
     });
 
   } catch (error) {
